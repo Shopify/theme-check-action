@@ -2,10 +2,5 @@
 
 set -eou pipefail
 
-# Disable analytics
-mkdir -p ~/.config/shopify && cat <<-YAML > ~/.config/shopify/config
-[analytics]
-enabled = false
-YAML
-
-shopify theme check "$theme_root"
+theme_root="${INPUT_THEME_ROOT:-.}"
+theme-check "$theme_root"
