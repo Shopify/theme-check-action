@@ -23,7 +23,7 @@ jobs:
       - name: Theme Check
         uses: shopify/theme-check-action@1
         with:
-          theme_root: './dist' # optional, defaults to "."
+          theme_root: '.' # optional, could be './dist'
 ```
 
 ## Configuration
