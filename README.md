@@ -32,3 +32,4 @@ The `shopify/theme-check-action` accepts the following arguments:
 
 * `theme_root` - (optional, default: `'.'`) Path from repo root to the root of the theme (e.g. `'./dist'`).
 * `flags` - (optional) theme-check command line flags. (e.g. `'--fail-level suggestion'`)
+* `version` - (optional, default: latest) specific theme-check version to use.
