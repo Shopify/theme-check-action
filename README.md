@@ -21,7 +21,7 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - name: Theme Check
-        uses: shopify/theme-check-action@1.0
+        uses: shopify/theme-check-action@1
         with:
           theme_root: './dist' # optional, defaults to "."
 ```
@@ -30,4 +30,5 @@ jobs:
 
 The `shopify/theme-check-action` accepts the following arguments:
 
-* `theme_root` - (optional, default: '.') Path from repo root to the root fo the theme('dist').
+* `theme_root` - (optional, default: `'.'`) Path from repo root to the root of the theme (e.g. `'./dist'`).
+* `flags` - (optional) theme-check command line flags. (e.g. `'--fail-level suggestion'`)
