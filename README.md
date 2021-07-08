@@ -21,7 +21,7 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - name: Theme Check
-        uses: shopify/theme-check-action@1
+        uses: shopify/theme-check-action@v1
         with:
           theme_root: '.' # optional, could be './dist'
 ```
