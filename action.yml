@@ -9,6 +9,9 @@ inputs:
     description: 'The root folder for the theme assets that will be uploaded (default: ".")'
     required: false
     default: '.'
+  flags:
+    description: 'CLI options and values (e.g. "--fail-level suggestion")'
+    required: false
 runs:
   using: 'docker'
   image: 'Dockerfile'
