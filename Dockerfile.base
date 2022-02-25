@@ -1,0 +1,10 @@
+FROM node:14-alpine
+
+RUN mkdir -p /var/task
+
+COPY package.json package-lock.json /var/task/
+
+# Install dependencies
+RUN apk add --update \
+    && apk add ruby ruby-nokogiri bash \
+    && cd /var/task && npm ci --production

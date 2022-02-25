@@ -1,0 +1,11 @@
+{
+  "compilerOptions": {
+    "module": "commonjs",
+    "target": "es2019",
+    "noImplicitAny": true,
+    "declaration": false,
+    "sourceMap": false,
+    "strictNullChecks": true
+  },
+  "include": ["index.ts"]
+}

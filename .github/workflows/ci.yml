@@ -35,7 +35,7 @@ jobs:
         id: theme-check-action
         with:
           theme_root: './dawn'
-          flags: '--fail-level suggestion --category performance'
+          flags: '--fail-level error --category performance'
 
   check_dawn_with_version:
     runs-on: ubuntu-latest
@@ -52,4 +52,4 @@ jobs:
         id: theme-check-action
         with:
           theme_root: './dawn'
-          version: '1.0.0'
+          version: '1.9.2'
