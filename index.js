@@ -39,7 +39,7 @@ const SeverityConversion = {
     const result = (await fs.promises
         .readFile('/tmp/results.json', 'utf8')
         .then((f) => JSON.parse(f)));
-    const annotations = result.flatMap((report) => report.offenses.map((offense) => ({
+    const allAnnotations = result.flatMap((report) => report.offenses.map((offense) => ({
         path: path.join(themeRoot || '.', report.path),
         start_line: offense.start_row + 1,
         end_line: offense.end_row + 1,
@@ -58,9 +58,24 @@ const SeverityConversion = {
     const suggestionCount = result
         .map((x) => x.suggestionCount)
         .reduce((a, b) => a + b, 0);
-    console.log('Updating GitHub check...');
+    const splitIntoChunks = (allAnnotations) => {
+        const chunks = [];
+        // this is Octokit/Checks API annotations limit
+        // https://docs.github.com/en/developers/apps/guides/creating-ci-tests-with-the-checks-api#step-24-collecting-rubocop-errors
+        const CHUNK_SIZE = 50;
+        let i = 0;
+        let nextChunk = allAnnotations.slice(i * CHUNK_SIZE, (i + 1) * CHUNK_SIZE);
+        while (nextChunk.length > 0) {
+            chunks.push(nextChunk);
+            i++;
+            nextChunk = allAnnotations.slice(i * CHUNK_SIZE, (i + 1) * CHUNK_SIZE);
+        }
+        return chunks;
+    };
+    const annotationsChunks = splitIntoChunks(allAnnotations);
+    console.log('Updating GitHub Checks...');
     // Update check
-    await octokit.checks.update({
+    await Promise.all(annotationsChunks.map(async (annotations) => octokit.checks.update({
         owner: ctx.repo.owner,
         repo: ctx.repo.repo,
         check_run_id: check.data.id,
@@ -71,22 +86,22 @@ const SeverityConversion = {
             title: CHECK_NAME,
             summary: `${errorCount} error(s), ${suggestionCount} warning(s) found`,
             text: (0, common_tags_1.stripIndent) `
-        ## Configuration
-        #### Actions Input
-        | Name | Value |
-        | ---- | ----- |
-        | theme_root | \`${themeRoot || '(not provided)'}\` |
-        | flags | \`${flags || '(not provided)'}\` |
-        | version | \`${version || '(not provided)'}\` |
-        #### ThemeCheck Configuration
-        \`\`\`yaml
-        __CONFIG_CONTENT__
-        \`\`\`
-        </details>
-      `.replace('__CONFIG_CONTENT__', await exec(`theme-check --print ${themeRoot}`).then((o) => o.stdout)),
+            ## Configuration
+            #### Actions Input
+            | Name | Value |
+            | ---- | ----- |
+            | theme_root | \`${themeRoot || '(not provided)'}\` |
+            | flags | \`${flags || '(not provided)'}\` |
+            | version | \`${version || '(not provided)'}\` |
+            #### ThemeCheck Configuration
+            \`\`\`yaml
+            __CONFIG_CONTENT__
+            \`\`\`
+            </details>
+          `.replace('__CONFIG_CONTENT__', await exec(`theme-check --print ${themeRoot}`).then((o) => o.stdout)),
             annotations,
         },
-    });
+    })));
 })().catch((e) => {
     console.error(e.stack); // tslint:disable-line
     core.setFailed(e.message);
