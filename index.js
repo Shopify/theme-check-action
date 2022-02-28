@@ -3,10 +3,13 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const core = require("@actions/core"); // tslint:disable-line
 // Currently @actions/github cannot be loaded via import statement due to typing error
 const github = require('@actions/github'); // tslint:disable-line
+const { GitHub, getOctokitOptions, } = require('@actions/github/lib/utils'); // tslint:disable-line
+const { throttling } = require('@octokit/plugin-throttling'); //tslint:disable-line
 const common_tags_1 = require("common-tags");
 const util_1 = require("util");
 const fs = require("fs");
 const path = require("path");
+const ThrottledOctokit = GitHub.plugin(throttling);
 const exec = (0, util_1.promisify)(require('child_process').exec);
 const CHECK_NAME = 'Theme Check Report';
 const exitCode = JSON.parse(process.argv[2]);
@@ -25,10 +28,26 @@ const SeverityConversion = {
         core.setFailed('theme-check-action: Please set token');
         return;
     }
-    const octokit = new github.GitHub(ghToken);
+    const octokit = new ThrottledOctokit({
+        ...getOctokitOptions(ghToken),
+        throttle: {
+            onRateLimit: (retryAfter, options, octokit) => {
+                octokit.log.warn(`Request quota exhausted for request ${options.method} ${options.url}`);
+                if (options.request.retryCount === 0) {
+                    // only retries once
+                    octokit.log.info(`Retrying after ${retryAfter} seconds!`);
+                    return true;
+                }
+            },
+            onAbuseLimit: (_retryAfter, options, octokit) => {
+                // does not retry, only logs a warning
+                octokit.log.warn(`Abuse detected for request ${options.method} ${options.url}`);
+            },
+        },
+    });
     console.log('Creating GitHub check...');
     // Create check
-    const check = await octokit.checks.create({
+    const check = await octokit.rest.checks.create({
         owner: ctx.repo.owner,
         repo: ctx.repo.repo,
         name: CHECK_NAME,
@@ -75,7 +94,7 @@ const SeverityConversion = {
     const annotationsChunks = splitIntoChunks(allAnnotations);
     console.log('Updating GitHub Checks...');
     // Update check
-    await Promise.all(annotationsChunks.map(async (annotations) => octokit.checks.update({
+    await Promise.all(annotationsChunks.map(async (annotations) => octokit.rest.checks.update({
         owner: ctx.repo.owner,
         repo: ctx.repo.repo,
         check_run_id: check.data.id,
