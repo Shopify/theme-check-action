@@ -76,6 +76,15 @@ function splitEvery<T>(n: number, array: T[]): T[][] {
   }, []);
 }
 
+function getDiffFilter(): (report: ThemeCheckReport) => boolean {
+  if (!fs.existsSync('/tmp/diff.log')) return () => true;
+  const diff: string[] = fs
+    .readFileSync('/tmp/diff.log', 'utf8')
+    .split('\n')
+    .filter(Boolean);
+  return (report) => diff.includes(report.path);
+}
+
 (async () => {
   const ctx = github.context as Context;
   const themeRoot = core.getInput('theme_root');
@@ -121,6 +130,17 @@ function splitEvery<T>(n: number, array: T[]): T[][] {
 
   console.log('Creating GitHub check...');
 
+  const result: ThemeCheckReport[] = await fs.promises
+    .readFile('/tmp/results.json', 'utf8')
+    .then((f: string) =>
+      JSON.parse(f)
+        .map((report: ThemeCheckReport) => ({
+          ...report,
+          path: path.join(themeRoot || '.', report.path),
+        }))
+        .filter(getDiffFilter()),
+    );
+
   // Create check
   const check = await octokit.rest.checks.create({
     owner: ctx.repo.owner,
@@ -131,10 +151,6 @@ function splitEvery<T>(n: number, array: T[]): T[][] {
   });
 
   console.log('Converting results.json into annotations...');
-
-  const result = (await fs.promises
-    .readFile('/tmp/results.json', 'utf8')
-    .then((f: string) => JSON.parse(f))) as ThemeCheckReport[];
 
   const allAnnotations: GitHubAnnotation[] = result.flatMap(
     (report: ThemeCheckReport) =>
@@ -168,20 +184,34 @@ function splitEvery<T>(n: number, array: T[]): T[][] {
 
   console.log('Updating GitHub Checks...');
 
-  // Update check
+  // Push annotations
   await Promise.all(
     annotationsChunks.map(async (annotations) =>
       octokit.rest.checks.update({
         owner: ctx.repo.owner,
         repo: ctx.repo.repo,
         check_run_id: check.data.id,
-        name: CHECK_NAME,
-        status: 'completed',
-        conclusion: exitCode > 0 ? 'failure' : 'success',
         output: {
           title: CHECK_NAME,
           summary: `${errorCount} error(s), ${suggestionCount} warning(s) found`,
-          text: markdown`
+          annotations,
+        },
+      }),
+    ),
+  );
+
+  // Add final report
+  await octokit.rest.checks.update({
+    owner: ctx.repo.owner,
+    repo: ctx.repo.repo,
+    check_run_id: check.data.id,
+    name: CHECK_NAME,
+    status: 'completed',
+    conclusion: exitCode > 0 ? 'failure' : 'success',
+    output: {
+      title: CHECK_NAME,
+      summary: `${errorCount} error(s), ${suggestionCount} warning(s) found`,
+      text: markdown`
             ## Configuration
             #### Actions Input
             | Name | Value |
@@ -195,16 +225,13 @@ function splitEvery<T>(n: number, array: T[]): T[][] {
             \`\`\`
             </details>
           `.replace(
-            '__CONFIG_CONTENT__',
-            await exec(`theme-check --print ${themeRoot}`).then(
-              (o: any) => o.stdout,
-            ),
-          ),
-          annotations,
-        },
-      }),
-    ),
-  );
+        '__CONFIG_CONTENT__',
+        await exec(`theme-check --print ${themeRoot}`).then(
+          (o: any) => o.stdout,
+        ),
+      ),
+    },
+  });
 })().catch((e) => {
   console.error(e.stack); // tslint:disable-line
   core.setFailed(e.message);
