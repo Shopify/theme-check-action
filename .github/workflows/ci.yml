@@ -9,47 +9,48 @@ jobs:
 
     steps:
       - uses: actions/checkout@v2
-      - uses: actions/checkout@v2
-        with:
-          repository: "shopify/dawn"
-          path: "./dawn"
+      # - uses: actions/checkout@v2
+      #   with:
+      #     repository: "shopify/dawn"
+      #     path: "./dawn"
 
       - name: Theme Check
         uses: ./
         id: theme-check-action
         with:
           theme_root: './dawn'
+          token: ${{ github.token }}
 
-  check_dawn_with_flags:
-    runs-on: ubuntu-latest
-
-    steps:
-      - uses: actions/checkout@v2
-      - uses: actions/checkout@v2
-        with:
-          repository: "shopify/dawn"
-          path: "./dawn"
-
-      - name: Theme Check
-        uses: ./
-        id: theme-check-action
-        with:
-          theme_root: './dawn'
-          flags: '--fail-level error --category performance'
-
-  check_dawn_with_version:
-    runs-on: ubuntu-latest
-
-    steps:
-      - uses: actions/checkout@v2
-      - uses: actions/checkout@v2
-        with:
-          repository: "shopify/dawn"
-          path: "./dawn"
-
-      - name: Theme Check
-        uses: ./
-        id: theme-check-action
-        with:
-          theme_root: './dawn'
-          version: '1.9.2'
+  # check_dawn_with_flags:
+  #   runs-on: ubuntu-latest
+  #
+  #   steps:
+  #     - uses: actions/checkout@v2
+  #     - uses: actions/checkout@v2
+  #       with:
+  #         repository: "shopify/dawn"
+  #         path: "./dawn"
+  #
+  #     - name: Theme Check
+  #       uses: ./
+  #       id: theme-check-action
+  #       with:
+  #         theme_root: './dawn'
+  #         flags: '--fail-level error --category performance'
+  #
+  # check_dawn_with_version:
+  #   runs-on: ubuntu-latest
+  #
+  #   steps:
+  #     - uses: actions/checkout@v2
+  #     - uses: actions/checkout@v2
+  #       with:
+  #         repository: "shopify/dawn"
+  #         path: "./dawn"
+  #
+  #     - name: Theme Check
+  #       uses: ./
+  #       id: theme-check-action
+  #       with:
+  #         theme_root: './dawn'
+  #         version: '1.9.2'
