@@ -1,5 +1,5 @@
 PROJECT_NAME := cpclermont/theme-check-action
-VERSION := 1.0.1
+VERSION := 1.0.2
 GITSHA:= $(shell echo $$(git describe --always --long --dirty))
 
 export GITSHA
