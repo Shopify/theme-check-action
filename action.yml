@@ -18,6 +18,9 @@ inputs:
   token:
     description: 'GitHub token so that the action can annotate the checks'
     required: false
+  base:
+    description: 'When token is set, only the files that contain a diff with this ref (branch, tag or commit) will have GitHub annotations.'
+    required: false
 runs:
   using: 'docker'
   image: 'Dockerfile'

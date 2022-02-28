@@ -6,5 +6,5 @@ COPY package.json package-lock.json /var/task/
 
 # Install dependencies
 RUN apk add --update \
-    && apk add ruby ruby-nokogiri bash \
+    && apk add ruby ruby-nokogiri bash git \
     && cd /var/task && npm ci --production

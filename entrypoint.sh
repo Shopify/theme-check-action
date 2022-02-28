@@ -6,6 +6,11 @@ flags="$INPUT_FLAGS"
 export PATH="$HOME/bin:$PATH"
 mkdir -p "$HOME/bin"
 
+function run() {
+  echo '$' "$@" 1>&2
+  "$@"
+}
+
 if [[ -n "$INPUT_VERSION" ]]; then
   gem install theme-check -N -v "$INPUT_VERSION" -n "$HOME/bin"
 else
@@ -14,22 +19,23 @@ fi
 
 set -eou pipefail
 
-echo theme-check --version
-theme-check --version
+run theme-check --version
 
 if [[ -z "$INPUT_TOKEN" ]]; then
-  echo theme-check $flags "$theme_root"
-  theme-check $flags "$theme_root"
+  run theme-check $flags "$theme_root"
   exit $?
 fi
 
-
 set +e
-echo theme-check $flags -o json "$theme_root" '>' /tmp/results.json
-theme-check $flags -o json "$theme_root" > /tmp/results.json
+run theme-check $flags -o json "$theme_root" > /tmp/results.json
 code=$?
+
+if [[ -n $INPUT_BASE ]]; then
+  run git fetch origin $INPUT_BASE
+  run git diff --name-only --diff-filter=ACMRTUB $INPUT_BASE > /tmp/diff.log
+fi
+
 set -e
 
-echo NODE_PATH=/var/task/node_modules node /index.js
 NODE_PATH=/var/task/node_modules node /index.js $code
 exit $code

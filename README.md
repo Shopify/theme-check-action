@@ -27,6 +27,7 @@ jobs:
         with:
           theme_root: '.' # optional, could be './dist'
           token: ${{ github.token }}
+          base: main
 ```
 
 ## Configuration
@@ -37,3 +38,4 @@ The `shopify/theme-check-action` accepts the following arguments:
 * `flags` - (optional) theme-check command line flags. (e.g. `'--fail-level suggestion'`)
 * `version` - (optional, default: latest) specific theme-check version to use.
 * `token` - (optional) result of `${{ github.token }}` to enable GitHub check annotations.
+* `base` - (optional) When `token` is set, only the files that contain a diff with this ref (branch, tag or commit) will have GitHub check annotations.

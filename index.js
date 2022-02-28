@@ -18,6 +18,24 @@ const SeverityConversion = {
     1: 'warning',
     2: 'notice',
 };
+function splitEvery(n, array) {
+    return array.reduce((acc, v, i) => {
+        if (i % n === 0)
+            acc.push([v]);
+        else
+            acc[acc.length - 1].push(v);
+        return acc;
+    }, []);
+}
+function getDiffFilter() {
+    if (!fs.existsSync('/tmp/diff.log'))
+        return () => true;
+    const diff = fs
+        .readFileSync('/tmp/diff.log', 'utf8')
+        .split('\n')
+        .filter(Boolean);
+    return (report) => diff.includes(report.path);
+}
 (async () => {
     const ctx = github.context;
     const themeRoot = core.getInput('theme_root');
@@ -46,6 +64,14 @@ const SeverityConversion = {
         },
     });
     console.log('Creating GitHub check...');
+    const result = await fs.promises
+        .readFile('/tmp/results.json', 'utf8')
+        .then((f) => JSON.parse(f)
+        .map((report) => ({
+        ...report,
+        path: path.join(themeRoot || '.', report.path),
+    }))
+        .filter(getDiffFilter()));
     // Create check
     const check = await octokit.rest.checks.create({
         owner: ctx.repo.owner,
@@ -55,9 +81,6 @@ const SeverityConversion = {
         status: 'in_progress',
     });
     console.log('Converting results.json into annotations...');
-    const result = (await fs.promises
-        .readFile('/tmp/results.json', 'utf8')
-        .then((f) => JSON.parse(f)));
     const allAnnotations = result.flatMap((report) => report.offenses.map((offense) => ({
         path: path.join(themeRoot || '.', report.path),
         start_line: offense.start_row + 1,
@@ -77,24 +100,23 @@ const SeverityConversion = {
     const suggestionCount = result
         .map((x) => x.suggestionCount)
         .reduce((a, b) => a + b, 0);
-    const splitIntoChunks = (allAnnotations) => {
-        const chunks = [];
-        // this is Octokit/Checks API annotations limit
-        // https://docs.github.com/en/developers/apps/guides/creating-ci-tests-with-the-checks-api#step-24-collecting-rubocop-errors
-        const CHUNK_SIZE = 50;
-        let i = 0;
-        let nextChunk = allAnnotations.slice(i * CHUNK_SIZE, (i + 1) * CHUNK_SIZE);
-        while (nextChunk.length > 0) {
-            chunks.push(nextChunk);
-            i++;
-            nextChunk = allAnnotations.slice(i * CHUNK_SIZE, (i + 1) * CHUNK_SIZE);
-        }
-        return chunks;
-    };
-    const annotationsChunks = splitIntoChunks(allAnnotations);
+    // This is Octokit/Checks API annotations limit
+    // https://docs.github.com/en/developers/apps/guides/creating-ci-tests-with-the-checks-api#step-24-collecting-rubocop-errors
+    const annotationsChunks = splitEvery(50, allAnnotations);
     console.log('Updating GitHub Checks...');
-    // Update check
+    // Push annotations
     await Promise.all(annotationsChunks.map(async (annotations) => octokit.rest.checks.update({
+        owner: ctx.repo.owner,
+        repo: ctx.repo.repo,
+        check_run_id: check.data.id,
+        output: {
+            title: CHECK_NAME,
+            summary: `${errorCount} error(s), ${suggestionCount} warning(s) found`,
+            annotations,
+        },
+    })));
+    // Add final report
+    await octokit.rest.checks.update({
         owner: ctx.repo.owner,
         repo: ctx.repo.repo,
         check_run_id: check.data.id,
@@ -118,9 +140,8 @@ const SeverityConversion = {
             \`\`\`
             </details>
           `.replace('__CONFIG_CONTENT__', await exec(`theme-check --print ${themeRoot}`).then((o) => o.stdout)),
-            annotations,
         },
-    })));
+    });
 })().catch((e) => {
     console.error(e.stack); // tslint:disable-line
     core.setFailed(e.message);
