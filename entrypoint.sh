@@ -32,7 +32,7 @@ code=$?
 
 if [[ -n $INPUT_BASE ]]; then
   run git fetch origin $INPUT_BASE
-  run git diff --name-only --diff-filter=ACMRTUB $INPUT_BASE > /tmp/diff.log
+  run git diff --name-only --diff-filter=ACMRTUB origin/$INPUT_BASE > /tmp/diff.log
 fi
 
 set -e
