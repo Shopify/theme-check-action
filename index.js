@@ -82,7 +82,7 @@ function getDiffFilter() {
     });
     console.log('Converting results.json into annotations...');
     const allAnnotations = result.flatMap((report) => report.offenses.map((offense) => ({
-        path: path.join(themeRoot || '.', report.path),
+        path: report.path,
         start_line: offense.start_row + 1,
         end_line: offense.end_row + 1,
         start_column: offense.start_row == offense.end_row

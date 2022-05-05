@@ -155,7 +155,7 @@ function getDiffFilter(): (report: ThemeCheckReport) => boolean {
   const allAnnotations: GitHubAnnotation[] = result.flatMap(
     (report: ThemeCheckReport) =>
       report.offenses.map((offense) => ({
-        path: path.join(themeRoot || '.', report.path),
+        path: report.path,
         start_line: offense.start_row + 1,
         end_line: offense.end_row + 1,
         start_column:
