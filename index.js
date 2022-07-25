@@ -27,14 +27,22 @@ function splitEvery(n, array) {
         return acc;
     }, []);
 }
-function getDiffFilter() {
+function getDiffFilter(themeRoot) {
     if (!fs.existsSync('/tmp/diff.log'))
         return () => true;
     const diff = fs
         .readFileSync('/tmp/diff.log', 'utf8')
         .split('\n')
-        .filter(Boolean);
+        .filter(Boolean)
+        .concat(path.join(themeRoot || '.', ''));
     return (report) => diff.includes(report.path);
+}
+function getPath(report, offense) {
+    var _a;
+    if (offense.check === 'MissingRequiredTemplateFiles') {
+        return ((_a = offense.message.match(/'([^']*)'/)) === null || _a === void 0 ? void 0 : _a[1]) || report.path;
+    }
+    return report.path;
 }
 (async () => {
     const ctx = github.context;
@@ -69,9 +77,9 @@ function getDiffFilter() {
         .then((f) => JSON.parse(f)
         .map((report) => ({
         ...report,
-        path: path.join(themeRoot || '.', report.path),
+        path: path.join(themeRoot || '.', report.path || ''),
     }))
-        .filter(getDiffFilter()));
+        .filter(getDiffFilter(themeRoot)));
     // Create check
     const check = await octokit.rest.checks.create({
         owner: ctx.repo.owner,
@@ -82,7 +90,7 @@ function getDiffFilter() {
     });
     console.log('Converting results.json into annotations...');
     const allAnnotations = result.flatMap((report) => report.offenses.map((offense) => ({
-        path: report.path,
+        path: getPath(report, offense),
         start_line: offense.start_row + 1,
         end_line: offense.end_row + 1,
         start_column: offense.start_row == offense.end_row
