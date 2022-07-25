@@ -76,13 +76,26 @@ function splitEvery<T>(n: number, array: T[]): T[][] {
   }, []);
 }
 
-function getDiffFilter(): (report: ThemeCheckReport) => boolean {
+function getDiffFilter(
+  themeRoot: string,
+): (report: ThemeCheckReport) => boolean {
   if (!fs.existsSync('/tmp/diff.log')) return () => true;
   const diff: string[] = fs
     .readFileSync('/tmp/diff.log', 'utf8')
     .split('\n')
-    .filter(Boolean);
+    .filter(Boolean)
+    .concat(path.join(themeRoot || '.', ''));
   return (report) => diff.includes(report.path);
+}
+
+function getPath(
+  report: ThemeCheckReport,
+  offense: ThemeCheckOffense,
+) {
+  if (offense.check === 'MissingRequiredTemplateFiles') {
+    return offense.message.match(/'([^']*)'/)?.[1] || report.path;
+  }
+  return report.path;
 }
 
 (async () => {
@@ -136,9 +149,9 @@ function getDiffFilter(): (report: ThemeCheckReport) => boolean {
       JSON.parse(f)
         .map((report: ThemeCheckReport) => ({
           ...report,
-          path: path.join(themeRoot || '.', report.path),
+          path: path.join(themeRoot || '.', report.path || ''),
         }))
-        .filter(getDiffFilter()),
+        .filter(getDiffFilter(themeRoot)),
     );
 
   // Create check
@@ -155,7 +168,7 @@ function getDiffFilter(): (report: ThemeCheckReport) => boolean {
   const allAnnotations: GitHubAnnotation[] = result.flatMap(
     (report: ThemeCheckReport) =>
       report.offenses.map((offense) => ({
-        path: report.path,
+        path: getPath(report, offense),
         start_line: offense.start_row + 1,
         end_line: offense.end_row + 1,
         start_column:
