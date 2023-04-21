@@ -46,6 +46,7 @@ jobs:
         with:
           repository: "shopify/dawn"
           path: "./dawn"
+          ref: 'v6.0.0'
 
       - name: Theme Check
         uses: ./

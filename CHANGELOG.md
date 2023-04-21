@@ -1,4 +1,9 @@
 
+[Unreleased]
+===================
+
+  * Run Theme Check with the most updated version of objects, filters, and tags ([#19](https://github.com/Shopify/theme-check-action/pull/19))
+
 v1.2.0 / 2022-02-28
 ===================
 
