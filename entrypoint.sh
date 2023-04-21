@@ -19,8 +19,8 @@ function run() {
 #   $2: The reference version number to compare against (string).
 #
 # Return Value:
-#   returns 1 when the version is equal to or greater than the reference version
-#   returns 2 when the version is less than the reference version
+#   returns 0 when the version is equal to or greater than the reference version
+#   returns 1 when the version is less than the reference version
 function is_version_at_least() {
     local IFS=.
     local i version=($1) reference=($2)
