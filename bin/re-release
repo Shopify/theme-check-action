@@ -1,0 +1,8 @@
+#!/bin/bash
+
+dir=$(dirname "$0")
+
+source "$dir/_common"
+
+$dir/rollback-release $1
+$dir/release $1

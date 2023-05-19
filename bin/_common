@@ -1,0 +1,11 @@
+#!/bin/bash
+
+if [ -z $1 ]; then
+  echo -e "\n Usage: $0 <tag>\n"
+  exit 1
+fi
+
+set -eou pipefail
+
+tag=$1
+remote="$(git remote | grep -q upstream && echo 'upstream' || echo 'origin')"

@@ -1,0 +1,9 @@
+#!/bin/bash
+
+dir=$(dirname "$0")
+
+source "$dir/_common"
+
+# Create tag
+git tag $tag
+git push $remote $tag
