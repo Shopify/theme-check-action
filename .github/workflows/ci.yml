@@ -8,8 +8,8 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
         with:
           repository: "shopify/dawn"
           path: "./dawn"
@@ -18,14 +18,15 @@ jobs:
         uses: ./
         id: theme-check-action
         with:
+          flags: '--fail-level crash'
           theme_root: './dawn'
 
   check_dawn_with_flags:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
         with:
           repository: "shopify/dawn"
           path: "./dawn"
@@ -35,14 +36,14 @@ jobs:
         id: theme-check-action
         with:
           theme_root: './dawn'
-          flags: '--fail-level error --category performance'
+          flags: '--fail-level crash'
 
   check_dawn_with_version:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
         with:
           repository: "shopify/dawn"
           path: "./dawn"
@@ -53,4 +54,5 @@ jobs:
         id: theme-check-action
         with:
           theme_root: './dawn'
-          version: '1.9.2'
+          flags: '--fail-level crash'
+          version: '3.50.0'

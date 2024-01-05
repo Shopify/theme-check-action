@@ -1,23 +1,16 @@
-import * as core from '@actions/core'; // tslint:disable-line
-// Currently @actions/github cannot be loaded via import statement due to typing error
-const github = require('@actions/github'); // tslint:disable-line
-const {
-  GitHub,
-  getOctokitOptions,
-} = require('@actions/github/lib/utils'); // tslint:disable-line
-const { throttling } = require('@octokit/plugin-throttling'); //tslint:disable-line
+import * as core from '@actions/core';
+import * as github from '@actions/github';
+import { GitHub, getOctokitOptions } from '@actions/github/lib/utils';
+import { throttling } from '@octokit/plugin-throttling';
 import { Context } from '@actions/github/lib/context';
 import { Octokit } from '@octokit/rest';
 import { stripIndent as markdown } from 'common-tags';
-import { promisify } from 'util';
-import * as fs from 'fs';
+import { ThemeCheckReport, ThemeCheckOffense } from './types';
 import * as path from 'path';
 
 const ThrottledOctokit = GitHub.plugin(throttling);
 
-const exec = promisify(require('child_process').exec);
 const CHECK_NAME = 'Theme Check Report';
-const exitCode = JSON.parse(process.argv[2]);
 
 // It's really hard to get that type out of their SDK. output?annotations? prevents us from extracting it.
 // from node_modules/@octokit/openapi-types/types.d.ts
@@ -42,30 +35,15 @@ interface GitHubAnnotation {
   raw_details?: string;
 }
 
-interface ThemeCheckOffense {
-  check: string;
-  severity: 0 | 1 | 2;
-  start_row: number;
-  start_column: number;
-  end_row: number;
-  end_column: number;
-  message: string;
-}
-
-interface ThemeCheckReport {
-  path: string;
-  offenses: ThemeCheckOffense[];
-  errorCount: number;
-  suggestionCount: number;
-  styleCount: number;
-}
-
 const SeverityConversion: {
-  [k: number]: 'failure' | 'warning' | 'notice';
+  [k in ThemeCheckOffense['severity']]:
+    | 'failure'
+    | 'warning'
+    | 'notice';
 } = {
-  0: 'failure',
-  1: 'warning',
-  2: 'notice',
+  error: 'failure',
+  warning: 'warning',
+  info: 'notice',
 };
 
 function splitEvery<T>(n: number, array: T[]): T[][] {
@@ -78,37 +56,29 @@ function splitEvery<T>(n: number, array: T[]): T[][] {
 
 function getDiffFilter(
   themeRoot: string,
+  fileDiff: string[] | undefined,
 ): (report: ThemeCheckReport) => boolean {
-  if (!fs.existsSync('/tmp/diff.log')) return () => true;
-  const diff: string[] = fs
-    .readFileSync('/tmp/diff.log', 'utf8')
-    .split('\n')
-    .filter(Boolean)
-    .concat(path.join(themeRoot || '.', ''));
-  return (report) => diff.includes(report.path);
+  if (!fileDiff) return () => true;
+  return (report) => {
+    return (
+      report.path.startsWith(themeRoot) &&
+      fileDiff.includes(report.path)
+    );
+  };
 }
 
-function getPath(
-  report: ThemeCheckReport,
-  offense: ThemeCheckOffense,
+export async function addAnnotations(
+  reports: ThemeCheckReport[],
+  exitCode: number,
+  configContent: string,
+  ghToken: string,
+  fileDiff: string[] | undefined,
 ) {
-  if (offense.check === 'MissingRequiredTemplateFiles') {
-    return offense.message.match(/'([^']*)'/)?.[1] || report.path;
-  }
-  return report.path;
-}
-
-(async () => {
+  const cwd = process.cwd();
   const ctx = github.context as Context;
   const themeRoot = core.getInput('theme_root');
   const version = core.getInput('version');
   const flags = core.getInput('flags');
-  const ghToken = core.getInput('token');
-
-  if (!ghToken) {
-    core.setFailed('theme-check-action: Please set token');
-    return;
-  }
 
   const octokit = new ThrottledOctokit({
     ...getOctokitOptions(ghToken),
@@ -143,16 +113,14 @@ function getPath(
 
   console.log('Creating GitHub check...');
 
-  const result: ThemeCheckReport[] = await fs.promises
-    .readFile('/tmp/results.json', 'utf8')
-    .then((f: string) =>
-      JSON.parse(f)
-        .map((report: ThemeCheckReport) => ({
-          ...report,
-          path: path.join(themeRoot || '.', report.path || ''),
-        }))
-        .filter(getDiffFilter(themeRoot)),
-    );
+  const root = path.resolve(cwd, themeRoot);
+
+  const result: ThemeCheckReport[] = reports.filter(
+    getDiffFilter(
+      root,
+      fileDiff?.map((x) => path.join(cwd, x)),
+    ),
+  );
 
   // Create check
   const check = await octokit.rest.checks.create({
@@ -163,12 +131,10 @@ function getPath(
     status: 'in_progress',
   });
 
-  console.log('Converting results.json into annotations...');
-
-  const allAnnotations: GitHubAnnotation[] = result.flatMap(
-    (report: ThemeCheckReport) =>
+  const allAnnotations: GitHubAnnotation[] = result
+    .flatMap((report: ThemeCheckReport) =>
       report.offenses.map((offense) => ({
-        path: getPath(report, offense),
+        path: path.relative(root, path.resolve(report.path)),
         start_line: offense.start_row + 1,
         end_line: offense.end_row + 1,
         start_column:
@@ -182,13 +148,27 @@ function getPath(
         annotation_level: SeverityConversion[offense.severity],
         message: `[${offense.check}] ${offense.message}`,
       })),
-  );
+    )
+    .sort((a, b) => severity(a) - severity(b));
+
+  function severity(a: GitHubAnnotation): number {
+    switch (a.annotation_level) {
+      case 'notice':
+        return 2;
+      case 'warning':
+        return 1;
+      case 'failure':
+        return 0;
+      default:
+        return 3;
+    }
+  }
 
   const errorCount = result
     .map((x) => x.errorCount)
     .reduce((a, b) => a + b, 0);
-  const suggestionCount = result
-    .map((x) => x.suggestionCount)
+  const warningCount = result
+    .map((x) => x.warningCount)
     .reduce((a, b) => a + b, 0);
 
   // This is Octokit/Checks API annotations limit
@@ -206,7 +186,7 @@ function getPath(
         check_run_id: check.data.id,
         output: {
           title: CHECK_NAME,
-          summary: `${errorCount} error(s), ${suggestionCount} warning(s) found`,
+          summary: `${errorCount} error(s), ${warningCount} warning(s) found`,
           annotations,
         },
       }),
@@ -223,7 +203,7 @@ function getPath(
     conclusion: exitCode > 0 ? 'failure' : 'success',
     output: {
       title: CHECK_NAME,
-      summary: `${errorCount} error(s), ${suggestionCount} warning(s) found`,
+      summary: `${errorCount} error(s), ${warningCount} warning(s) found`,
       text: markdown`
             ## Configuration
             #### Actions Input
@@ -237,15 +217,7 @@ function getPath(
             __CONFIG_CONTENT__
             \`\`\`
             </details>
-          `.replace(
-        '__CONFIG_CONTENT__',
-        await exec(`theme-check --print ${themeRoot}`).then(
-          (o: any) => o.stdout,
-        ),
-      ),
+          `.replace('__CONFIG_CONTENT__', configContent),
     },
   });
-})().catch((e) => {
-  console.error(e.stack); // tslint:disable-line
-  core.setFailed(e.message);
-});
+}

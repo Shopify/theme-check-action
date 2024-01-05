@@ -5,7 +5,9 @@
     "noImplicitAny": true,
     "declaration": false,
     "sourceMap": false,
+    "outDir": "dist",
+    "rootDir": "src",
     "strictNullChecks": true
   },
-  "include": ["index.ts"]
+  "include": ["src/**/*.ts"]
 }
