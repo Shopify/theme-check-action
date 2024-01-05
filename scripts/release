@@ -1,0 +1,56 @@
+#!/bin/bash
+
+# This script does the following:
+# - create a new tag for input vX.X.X
+# - rerelease the tag vX.X (so that @shopify/theme-check-action@vX.X) points to the new code
+# - update the vX branch to point to the new code
+
+set -eou pipefail
+
+if ! [[ $1 =~ ^v([0-9]+\.){2}[0-9]+$ ]]; then
+  echo "Version must match vX.X.X"
+  exit 1
+fi
+
+remote="origin"
+
+run() {
+  echo "$@"
+  "$@"
+}
+
+release() {
+  run git tag $1
+  run git push $remote $1
+}
+
+deleteTag() {
+  run git push --delete $remote $1 || true
+  run git tag --delete $1 || true
+}
+
+updateBranch() {
+  run git fetch $remote $1 || true
+  local current_branch=$(git rev-parse --abbrev-ref HEAD)
+
+  run git checkout $1 || run git checkout -b $1 2> /dev/null
+  run git reset --hard $remote/$1 || true 2> /dev/null
+
+  run git merge $current_branch
+  run git push $remote $1
+  run git checkout $current_branch
+}
+
+
+# v1.x.x
+tag=$1
+release $tag
+
+# v1.x
+minor=${tag%.*}
+deleteTag $minor
+release $minor
+
+# v1
+major=${minor%.*}
+updateBranch $major
