@@ -4,7 +4,7 @@
 
 ## About this repo
 
-[`shopify theme check`]((https://shopify.dev/docs/themes/tools/theme-check) on Shopify Theme Pull Requests using GitHub Actions.
+[`shopify theme check`](https://shopify.dev/docs/themes/tools/theme-check) on Shopify Theme Pull Requests using GitHub Actions.
 
 ![demo](./demo.png)
 
