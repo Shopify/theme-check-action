@@ -1,4 +1,17 @@
 
+v2.0.0 / 2024-01-05
+===================
+
+  * Theme Check 2.0 and Shopify CLI 3.50+ support
+  * Remove support for Ruby Theme Check (v1)
+
+v1.3.1 / 2024-01-05
+===================
+
+  * Merge pull request #29 from snacsnoc/update-checkout-v3-node16-compatibility
+  * Update ci.yml to use checkout@v3
+  * Update README.md to reflect upgrade to checkout@v3
+
 v1.3.0 / 2023-11-28
 ===================
 
