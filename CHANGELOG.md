@@ -1,4 +1,9 @@
 
+v2.0.1 / 2024-02-14
+==================
+
+  * Don't pass the `--dev-preview` flag for Shopify CLI versions >= 3.55.0
+
 v2.0.0 / 2024-01-05
 ===================
 
