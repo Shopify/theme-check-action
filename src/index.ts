@@ -5,6 +5,7 @@ import { runChecksText } from './steps/runChecksText';
 import { getConfigContents } from './steps/getConfigContents';
 import { getFileDiff } from './steps/getFileDiff';
 import { addAnnotations } from './addAnnotations';
+import * as semver from 'semver';
 
 async function run() {
   const cwd = process.cwd();
@@ -16,23 +17,35 @@ async function run() {
   const flags = core.getInput('flags') || '';
   const ghToken = core.getInput('token');
   const base = core.getInput('base');
+  const devPreview = requiresDevPreview(version);
 
   try {
     await installCli(version);
     if (ghToken) {
       const [{ report, exitCode }, configContent, fileDiff] =
         await Promise.all([
-          runChecksJson(themeRoot, shopifyExecutable, true, flags),
-          getConfigContents(themeRoot, shopifyExecutable, true),
+          runChecksJson(
+            themeRoot,
+            shopifyExecutable,
+            devPreview,
+            flags,
+          ),
+          getConfigContents(themeRoot, shopifyExecutable, devPreview),
           getFileDiff(base, cwd),
         ]);
-      await addAnnotations(report, exitCode, configContent, ghToken, fileDiff);
+      await addAnnotations(
+        report,
+        exitCode,
+        configContent,
+        ghToken,
+        fileDiff,
+      );
       process.exit(exitCode);
     } else {
       const { exitCode } = await runChecksText(
         themeRoot,
         shopifyExecutable,
-        true,
+        devPreview,
         flags,
       );
       process.exit(exitCode);
@@ -41,6 +54,14 @@ async function run() {
     console.error(e.stack); // tslint:disable-line
     core.setFailed(e.message);
   }
+}
+
+function requiresDevPreview(version: string) {
+  return (
+    !!version &&
+    semver.gte(version, '3.50.0') &&
+    semver.lt(version, '3.55.0')
+  );
 }
 
 run();
