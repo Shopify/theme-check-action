@@ -1,4 +1,9 @@
 
+v2.1.1 / 2024-04-04
+==================
+
+  * Revert "Add direct support for bun, pnpm and yarn" -- issues with pnpm
+
 v2.1.0 / 2024-04-04
 ==================
 
