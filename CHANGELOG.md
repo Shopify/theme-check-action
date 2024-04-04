@@ -1,4 +1,9 @@
 
+v2.1.0 / 2024-04-04
+==================
+
+  * Add support for different package managers (thank you @andershagbard)
+
 v2.0.1 / 2024-02-14
 ==================
 
