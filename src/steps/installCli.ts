@@ -1,6 +1,6 @@
+import { promises as fs } from 'fs';
 import { exec } from '@actions/exec';
 import { detect } from 'detect-package-manager';
-import which = require('which');
 import * as semver from 'semver';
 
 const MIN_VERSION = '3.50.0';
@@ -16,7 +16,7 @@ export async function installCli(version?: string) {
 
   let packageManager = await detect();
   try {
-    await which(packageManager);
+    await fs.access(packageManager);
   } catch (e) {
     packageManager = 'npm';
   }

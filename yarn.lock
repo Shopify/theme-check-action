@@ -214,11 +214,6 @@
   resolved "https://registry.npmjs.org/@types/semver/-/semver-7.5.6.tgz#c65b2bfce1bec346582c07724e3f8c1017a20339"
   integrity sha512-dn1l8LaMea/IjDoHNd9J52uBbInB796CDffS6VdIxvqYCPSG0V0DzHp76GpaWnlhg88uYyPbXCDIowa86ybd5A==
 
-"@types/which@^3.0.3":
-  version "3.0.3"
-  resolved "https://registry.yarnpkg.com/@types/which/-/which-3.0.3.tgz#41142ed5a4743128f1bc0b69c46890f0453ddb89"
-  integrity sha512-2C1+XoY0huExTbs8MQv1DuS5FS86+SEjdM9F/+GS61gg5Hqbtj8ZiDSx8MfWcyei907fIPbfPGCOrNUTnVHY1g==
-
 "@vercel/ncc@^0.38.1":
   version "0.38.1"
   resolved "https://registry.npmjs.org/@vercel/ncc/-/ncc-0.38.1.tgz#13f08738111e1d9e8a22fd6141f3590e54d9a60e"
@@ -324,11 +319,6 @@ isexe@^2.0.0:
   version "2.0.0"
   resolved "https://registry.yarnpkg.com/isexe/-/isexe-2.0.0.tgz#e8fbf374dc556ff8947a10dcb0572d633f2cfa10"
   integrity sha512-RHxMLp9lnKHGHRng9QFhRCMbYAcVpn69smSGcq3f36xjgVVWThj4qqLbTLlq7Ssj8B+fIQ1EuCEGI2lKsyQeIw==
-
-isexe@^3.1.1:
-  version "3.1.1"
-  resolved "https://registry.yarnpkg.com/isexe/-/isexe-3.1.1.tgz#4a407e2bd78ddfb14bea0c27c6f7072dde775f0d"
-  integrity sha512-LpB/54B+/2J5hqQ7imZHfdU31OlgQqx7ZicVlkm9kzg9/w8GKLEcFfJl/t7DCEDueOyBAD6zCCwTO6Fzs0NoEQ==
 
 lru-cache@^6.0.0:
   version "6.0.0"
@@ -489,13 +479,6 @@ which@^2.0.1:
   integrity sha512-BLI3Tl1TW3Pvl70l3yq3Y64i+awpwXqsGBYWkkqMtnbXgrMD+yj7rhW0kuEDxzJaYXGjEW5ogapKNMEKNMjibA==
   dependencies:
     isexe "^2.0.0"
-
-which@^4.0.0:
-  version "4.0.0"
-  resolved "https://registry.yarnpkg.com/which/-/which-4.0.0.tgz#cd60b5e74503a3fbcfbf6cd6b4138a8bae644c1a"
-  integrity sha512-GlaYyEb07DPxYCKhKzplCWBJtvxZcZMrL+4UkrTSJHHPyZU4mYYTv3qaOe77H7EODLSSopAUFAc6W8U4yqvscg==
-  dependencies:
-    isexe "^3.1.1"
 
 wrappy@1:
   version "1.0.2"
