@@ -16,8 +16,10 @@ export async function installCli(version?: string) {
 
   let packageManager = await detect();
   try {
+    console.log('Checking ' + packageManager)
     await fs.access(packageManager);
   } catch (e) {
+    console.log('No access to ' + packageManager)
     packageManager = 'npm';
   }
 
