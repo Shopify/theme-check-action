@@ -14,7 +14,7 @@ export async function installCli(version?: string) {
     );
   }
 
-  let packageManager = await detect({ cwd: './' });
+  let packageManager = await detect();
   try {
     await which(packageManager);
   } catch (e) {
