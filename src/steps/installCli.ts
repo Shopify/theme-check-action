@@ -1,5 +1,4 @@
 import { exec } from '@actions/exec';
-import { detect } from 'detect-package-manager';
 import * as semver from 'semver';
 import which = require('which');
 
