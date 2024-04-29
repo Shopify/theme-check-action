@@ -1,5 +1,6 @@
 import { exec } from '@actions/exec';
 import { detect } from 'detect-package-manager';
+import which = require('which');
 import * as semver from 'semver';
 
 const MIN_VERSION = '3.50.0';
@@ -13,17 +14,29 @@ export async function installCli(version?: string) {
     );
   }
 
-  const packageManager = await detect();
+  let packageManager = await detect();
+  try {
+    await which(packageManager);
+  } catch (e) {
+    packageManager = 'npm';
+  }
+
   const args: string[] = []
   switch (packageManager) {
     case 'bun':
-    case 'pnpm':
-    case 'yarn':
-      args.push('add', '--no-lockfile');
+      args.push('add', '--no-save');
       break;
 
     case 'npm':
-      args.push('install', '--no-package-lock', '--no-save');
+      args.push('install', '--no-package-lock');
+      break;
+
+    case 'pnpm':
+      args.push('add', '--no-lockfile');
+      break;
+
+    case 'yarn':
+      args.push('add', '--no-lockfile');
       break;
   }
 
