@@ -1,5 +1,6 @@
 import { exec } from '@actions/exec';
 import * as semver from 'semver';
+import { detect } from 'detect-package-manager';
 import which = require('which');
 
 const MIN_VERSION = '3.50.0';
