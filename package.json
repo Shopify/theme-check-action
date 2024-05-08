@@ -21,7 +21,10 @@
     "@actions/github": "^5.1.1",
     "@octokit/plugin-throttling": "^3.5.2",
     "@octokit/rest": "^18.12.0",
+    "@types/which": "^3.0.3",
     "common-tags": "^1.8.2",
-    "semver": "^7.5.4"
+    "detect-package-manager": "^3.0.1",
+    "semver": "^7.5.4",
+    "which": "^4.0.0"
   }
 }

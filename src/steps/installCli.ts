@@ -1,5 +1,7 @@
 import { exec } from '@actions/exec';
 import * as semver from 'semver';
+import { detect } from 'detect-package-manager';
+import which = require('which');
 
 const MIN_VERSION = '3.50.0';
 
@@ -12,10 +14,34 @@ export async function installCli(version?: string) {
     );
   }
 
-  await exec('npm', [
-    'install',
-    '--no-package-lock',
-    '--no-save',
+  let packageManager = await detect();
+  try {
+    await which(packageManager);
+  } catch (e) {
+    packageManager = 'npm';
+  }
+
+  const args: string[] = []
+  switch (packageManager) {
+    case 'bun':
+      args.push('add', '--no-save');
+      break;
+
+    case 'npm':
+      args.push('install', '--no-package-lock');
+      break;
+
+    case 'pnpm':
+      args.push('add', '--no-lockfile');
+      break;
+
+    case 'yarn':
+      args.push('add', '--no-lockfile');
+      break;
+  }
+
+  await exec(packageManager, [
+    ...args,
     '@shopify/cli' + versionSuffix,
     '@shopify/theme' + versionSuffix,
   ]);
