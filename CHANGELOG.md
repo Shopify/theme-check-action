@@ -1,4 +1,10 @@
 
+v2.1.2 / 2024-05-10
+==================
+
+  * Don't install `@shopify/theme` from v3.59 onward
+  * Allow for experimental CLI versions
+
 v2.1.1 / 2024-04-04
 ==================
 
