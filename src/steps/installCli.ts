@@ -2,6 +2,7 @@ import { exec } from '@actions/exec';
 import * as semver from 'semver';
 
 const MIN_VERSION = '3.50.0';
+const MAX_THEME_VERSION = '3.59.0';
 
 export async function installCli(version?: string) {
   const versionSuffix = version ? `@${version}` : '';
@@ -12,17 +13,41 @@ export async function installCli(version?: string) {
     );
   }
 
-  await exec('npm', [
-    'install',
-    '--no-package-lock',
-    '--no-save',
-    '@shopify/cli' + versionSuffix,
-    '@shopify/theme' + versionSuffix,
-  ]);
+  await exec(
+    'npm',
+    [
+      'install',
+      '--no-package-lock',
+      '--no-save',
+      `@shopify/cli${versionSuffix}`,
+      shouldIncludeTheme(version)
+        ? `@shopify/theme${versionSuffix}`
+        : '',
+    ].filter(Boolean),
+  );
+}
+
+function shouldIncludeTheme(version?: string) {
+  if (!version || version.includes('experimental')) {
+    return false;
+  }
+
+  if (!semver.valid(version)) {
+    return false;
+  }
+
+  if (
+    semver.gte(version, MIN_VERSION) &&
+    semver.lt(version, MAX_THEME_VERSION)
+  ) {
+    return true;
+  }
+
+  return false;
 }
 
 function isValidVersion(version?: string): boolean {
-  if (!version) {
+  if (!version || version.includes('experimental')) {
     return true;
   }
 

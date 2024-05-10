@@ -6,7 +6,7 @@ export async function runChecksJson(
   devPreview = true,
   flags = '',
 ) {
-  const { exitCode, stdout } = await getExecOutput(
+  const { exitCode, stdout, stderr } = await getExecOutput(
     shopifyExecutable,
     [
       'theme',
@@ -21,6 +21,7 @@ export async function runChecksJson(
       ignoreReturnCode: true,
     },
   );
+  console.error(stderr);
 
   return {
     exitCode,
