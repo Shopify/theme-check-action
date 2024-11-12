@@ -114,25 +114,21 @@ export async function addAnnotations(
 
   const allAnnotations: GitHubAnnotation[] = reports
     .flatMap((report: ThemeCheckReport) =>
-      report.offenses.map((offense) => {
-        console.log({root, path: path.resolve(report.path), origPath: report.path});
-
-        return {
-          path: path.relative(cwd, path.resolve(report.path)),
-              start_line: offense.start_row + 1,
-            end_line: offense.end_row + 1,
-            start_column:
-          offense.start_row == offense.end_row
-              ? offense.start_column
-              : undefined,
-              end_column:
-          offense.start_row == offense.end_row
-              ? offense.end_column
-              : undefined,
-              annotation_level: SeverityConversion[offense.severity],
-            message: `[${offense.check}] ${offense.message}`,
-        }
-      }),
+      report.offenses.map((offense) => ({
+        path: path.relative(cwd, path.resolve(report.path)),
+            start_line: offense.start_row + 1,
+          end_line: offense.end_row + 1,
+          start_column:
+        offense.start_row == offense.end_row
+            ? offense.start_column
+            : undefined,
+            end_column:
+        offense.start_row == offense.end_row
+            ? offense.end_column
+            : undefined,
+            annotation_level: SeverityConversion[offense.severity],
+          message: `[${offense.check}] ${offense.message}`,
+      })),
     )
     .sort((a, b) => severity(a) - severity(b));
 
@@ -168,8 +164,7 @@ export async function addAnnotations(
   const checksUpdateResult = await Promise.all(
     annotationsChunks.map(async (annotations) =>
       octokit.rest.checks.update({
-        owner: ctx.repo.owner,
-        repo: ctx.repo.repo,
+        ...ctx.repo,
         check_run_id: check.data.id,
         output: {
           title: CHECK_NAME,
@@ -184,11 +179,9 @@ export async function addAnnotations(
 
   // Add final report
   await octokit.rest.checks.update({
-    owner: ctx.repo.owner,
-    repo: ctx.repo.repo,
+    ...ctx.repo,
     check_run_id: check.data.id,
     name: CHECK_NAME,
-    status: 'completed',
     conclusion: exitCode > 0 ? 'failure' : 'success',
     output: {
       title: CHECK_NAME,
