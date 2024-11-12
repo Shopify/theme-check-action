@@ -68,7 +68,7 @@ export async function addAnnotations(
   const version = core.getInput('version');
   const flags = core.getInput('flags');
 
-  const octokit = new ThrottledOctokit({
+  /*const octokit = new ThrottledOctokit({
     ...getOctokitOptions(ghToken),
     throttle: {
       onRateLimit: (
@@ -97,11 +97,10 @@ export async function addAnnotations(
         );
       },
     },
-  }) as Octokit;
+  }) as Octokit;*/
+  const octokit = new Octokit(getOctokitOptions(ghToken));
 
   console.log('Creating GitHub check...');
-
-  const root = path.resolve(cwd, themeRoot);
 
   // Create check
   const check = await octokit.rest.checks.create({
@@ -155,8 +154,6 @@ export async function addAnnotations(
   // https://docs.github.com/en/developers/apps/guides/creating-ci-tests-with-the-checks-api#step-24-collecting-rubocop-errors
   const annotationsChunks = splitEvery(50, allAnnotations);
 
-  console.log(util.inspect(annotationsChunks, false, null, true /* enable colors */))
-
   console.log('Updating GitHub Checks...');
 
   // Push annotations
@@ -200,5 +197,5 @@ export async function addAnnotations(
     },
   });
 
-  console.log(util.inspect(checksUpdateResult, false, null, true /* enable colors */))
+  console.log(util.inspect(checksUpdateResult.data, false, null, true /* enable colors */))
 }
