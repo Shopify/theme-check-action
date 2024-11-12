@@ -105,8 +105,7 @@ export async function addAnnotations(
 
   // Create check
   const check = await octokit.rest.checks.create({
-    owner: ctx.repo.owner,
-    repo: ctx.repo.repo,
+    ...ctx.repo,
     name: CHECK_NAME,
     head_sha: ctx.sha,
     status: 'in_progress',
@@ -180,7 +179,7 @@ export async function addAnnotations(
     ...ctx.repo,
     check_run_id: check.data.id,
     name: CHECK_NAME,
-    // conclusion: exitCode > 0 ? 'failure' : 'success',
+    completed_at: new Date().toISOString(),
     output: {
       title: CHECK_NAME,
       summary: `${errorCount} error(s), ${warningCount} warning(s) found`,
