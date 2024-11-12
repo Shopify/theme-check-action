@@ -180,7 +180,7 @@ export async function addAnnotations(
     ...ctx.repo,
     check_run_id: check.data.id,
     name: CHECK_NAME,
-    conclusion: exitCode > 0 ? 'failure' : 'success',
+    // conclusion: exitCode > 0 ? 'failure' : 'success',
     output: {
       title: CHECK_NAME,
       summary: `${errorCount} error(s), ${warningCount} warning(s) found`,
