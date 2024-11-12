@@ -7,6 +7,7 @@ import { Octokit } from '@octokit/rest';
 import { stripIndent as markdown } from 'common-tags';
 import { ThemeCheckReport, ThemeCheckOffense } from './types';
 import * as path from 'path';
+import * as util from "util";
 
 const ThrottledOctokit = GitHub.plugin(throttling);
 
@@ -131,6 +132,8 @@ export async function addAnnotations(
     )
     .sort((a, b) => severity(a) - severity(b));
 
+  console.log(util.inspect(allAnnotations, false, null, true /* enable colors */))
+
   function severity(a: GitHubAnnotation): number {
     switch (a.annotation_level) {
       case 'notice':
@@ -158,7 +161,7 @@ export async function addAnnotations(
   console.log('Updating GitHub Checks...');
 
   // Push annotations
-  const results = await Promise.all(
+  await Promise.all(
     annotationsChunks.map(async (annotations) =>
       octokit.rest.checks.update({
         owner: ctx.repo.owner,
@@ -172,7 +175,6 @@ export async function addAnnotations(
       }),
     ),
   );
-  console.log(results, false, null, true);
 
   // Add final report
   await octokit.rest.checks.update({
