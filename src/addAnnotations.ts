@@ -114,21 +114,25 @@ export async function addAnnotations(
 
   const allAnnotations: GitHubAnnotation[] = reports
     .flatMap((report: ThemeCheckReport) =>
-      report.offenses.map((offense) => ({
-        path: path.relative(root, path.resolve(report.path)),
-        start_line: offense.start_row + 1,
-        end_line: offense.end_row + 1,
-        start_column:
+      report.offenses.map((offense) => {
+        console.log({root, path: path.resolve(report.path), origPath: report.path});
+
+        return {
+          path: path.relative(root, path.resolve(report.path)),
+              start_line: offense.start_row + 1,
+            end_line: offense.end_row + 1,
+            start_column:
           offense.start_row == offense.end_row
-            ? offense.start_column
-            : undefined,
-        end_column:
+              ? offense.start_column
+              : undefined,
+              end_column:
           offense.start_row == offense.end_row
-            ? offense.end_column
-            : undefined,
-        annotation_level: SeverityConversion[offense.severity],
-        message: `[${offense.check}] ${offense.message}`,
-      })),
+              ? offense.end_column
+              : undefined,
+              annotation_level: SeverityConversion[offense.severity],
+            message: `[${offense.check}] ${offense.message}`,
+        }
+      }),
     )
     .sort((a, b) => severity(a) - severity(b));
 
