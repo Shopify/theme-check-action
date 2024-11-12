@@ -179,7 +179,7 @@ export async function addAnnotations(
     ...ctx.repo,
     check_run_id: check.data.id,
     name: CHECK_NAME,
-    completed_at: new Date().toISOString(),
+    conclusion: 'success',
     output: {
       title: CHECK_NAME,
       summary: `${errorCount} error(s), ${warningCount} warning(s) found`,
