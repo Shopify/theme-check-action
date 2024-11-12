@@ -54,19 +54,6 @@ function splitEvery<T>(n: number, array: T[]): T[][] {
   }, []);
 }
 
-function getDiffFilter(
-  themeRoot: string,
-  fileDiff: string[] | undefined,
-): (report: ThemeCheckReport) => boolean {
-  if (!fileDiff) return () => true;
-  return (report) => {
-    return (
-      report.path.startsWith(themeRoot) &&
-      fileDiff.includes(report.path)
-    );
-  };
-}
-
 export async function addAnnotations(
   reports: ThemeCheckReport[],
   exitCode: number,
@@ -115,30 +102,6 @@ export async function addAnnotations(
 
   const root = path.resolve(cwd, themeRoot);
 
-  console.log('Apply diff filter');
-  console.log({
-    root,
-    fileDiff,
-    result: getDiffFilter(
-        root,
-        fileDiff?.map((x) => path.join(cwd, x)),
-    ),
-  });
-
-  const test = getDiffFilter(
-          root,
-          fileDiff?.map((x) => path.join(cwd, x)),
-      );
-
-  const result: ThemeCheckReport[] = reports.filter(
-    getDiffFilter(
-      root,
-      fileDiff?.map((x) => path.join(cwd, x)),
-    ),
-  );
-
-  console.log({result});
-
   // Create check
   const check = await octokit.rest.checks.create({
     owner: ctx.repo.owner,
@@ -148,7 +111,7 @@ export async function addAnnotations(
     status: 'in_progress',
   });
 
-  const allAnnotations: GitHubAnnotation[] = result
+  const allAnnotations: GitHubAnnotation[] = reports
     .flatMap((report: ThemeCheckReport) =>
       report.offenses.map((offense) => ({
         path: path.relative(root, path.resolve(report.path)),
@@ -168,8 +131,6 @@ export async function addAnnotations(
     )
     .sort((a, b) => severity(a) - severity(b));
 
-  console.log(allAnnotations);
-
   function severity(a: GitHubAnnotation): number {
     switch (a.annotation_level) {
       case 'notice':
@@ -183,10 +144,10 @@ export async function addAnnotations(
     }
   }
 
-  const errorCount = result
+  const errorCount = reports
     .map((x) => x.errorCount)
     .reduce((a, b) => a + b, 0);
-  const warningCount = result
+  const warningCount = reports
     .map((x) => x.warningCount)
     .reduce((a, b) => a + b, 0);
 
@@ -197,7 +158,7 @@ export async function addAnnotations(
   console.log('Updating GitHub Checks...');
 
   // Push annotations
-  await Promise.all(
+  const results = await Promise.all(
     annotationsChunks.map(async (annotations) =>
       octokit.rest.checks.update({
         owner: ctx.repo.owner,
@@ -211,6 +172,7 @@ export async function addAnnotations(
       }),
     ),
   );
+  console.log(results, false, null, true);
 
   // Add final report
   await octokit.rest.checks.update({
