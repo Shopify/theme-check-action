@@ -8,6 +8,7 @@ import { stripIndent as markdown } from 'common-tags';
 import { ThemeCheckReport, ThemeCheckOffense } from './types';
 import * as path from 'path';
 import * as util from "util";
+import {PullRequestEvent} from "@octokit/webhooks-types";
 
 const ThrottledOctokit = GitHub.plugin(throttling);
 
@@ -103,10 +104,11 @@ export async function addAnnotations(
   console.log('Creating GitHub check...');
 
   // Create check
+  const prPayload = github.context.payload as PullRequestEvent
   const check = await octokit.rest.checks.create({
     ...ctx.repo,
     name: CHECK_NAME,
-    head_sha: ctx.sha,
+    head_sha: github.context.eventName == 'pull_request' ? prPayload.pull_request.head.sha : github.context.sha,
     status: 'in_progress',
   });
 
