@@ -136,8 +136,6 @@ export async function addAnnotations(
     )
     .sort((a, b) => severity(a) - severity(b));
 
-  console.log(util.inspect(allAnnotations, false, null, true /* enable colors */))
-
   function severity(a: GitHubAnnotation): number {
     switch (a.annotation_level) {
       case 'notice':
@@ -161,6 +159,8 @@ export async function addAnnotations(
   // This is Octokit/Checks API annotations limit
   // https://docs.github.com/en/developers/apps/guides/creating-ci-tests-with-the-checks-api#step-24-collecting-rubocop-errors
   const annotationsChunks = splitEvery(50, allAnnotations);
+
+  console.log(util.inspect(annotationsChunks, false, null, true /* enable colors */))
 
   console.log('Updating GitHub Checks...');
 
