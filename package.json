@@ -8,6 +8,7 @@
     "step:config": "scripts/run-step getConfigContents"
   },
   "devDependencies": {
+    "@octokit/webhooks-types": "^7.6.1",
     "@types/common-tags": "^1.8.1",
     "@types/node": "10.17.60",
     "@types/semver": "^7.5.6",
