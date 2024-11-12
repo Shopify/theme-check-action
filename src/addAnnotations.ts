@@ -118,7 +118,7 @@ export async function addAnnotations(
         console.log({root, path: path.resolve(report.path), origPath: report.path});
 
         return {
-          path: path.relative(root, path.resolve(report.path)),
+          path: path.relative(cwd, path.resolve(report.path)),
               start_line: offense.start_row + 1,
             end_line: offense.end_row + 1,
             start_column:
