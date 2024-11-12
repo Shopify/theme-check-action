@@ -161,7 +161,7 @@ export async function addAnnotations(
   console.log('Updating GitHub Checks...');
 
   // Push annotations
-  const checksUpdateResult = await Promise.all(
+  await Promise.all(
     annotationsChunks.map(async (annotations) =>
       octokit.rest.checks.update({
         ...ctx.repo,
@@ -175,10 +175,8 @@ export async function addAnnotations(
     ),
   );
 
-  console.log(util.inspect(checksUpdateResult, false, null, true /* enable colors */))
-
   // Add final report
-  await octokit.rest.checks.update({
+  const checksUpdateResult =  await octokit.rest.checks.update({
     ...ctx.repo,
     check_run_id: check.data.id,
     name: CHECK_NAME,
@@ -202,4 +200,6 @@ export async function addAnnotations(
           `.replace('__CONFIG_CONTENT__', configContent),
     },
   });
+
+  console.log(util.inspect(checksUpdateResult, false, null, true /* enable colors */))
 }
