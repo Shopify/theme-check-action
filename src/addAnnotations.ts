@@ -125,12 +125,19 @@ export async function addAnnotations(
     ),
   });
 
+  const test = getDiffFilter(
+          root,
+          fileDiff?.map((x) => path.join(cwd, x)),
+      );
+
   const result: ThemeCheckReport[] = reports.filter(
     getDiffFilter(
       root,
       fileDiff?.map((x) => path.join(cwd, x)),
     ),
   );
+
+  console.log({result});
 
   // Create check
   const check = await octokit.rest.checks.create({
@@ -160,6 +167,8 @@ export async function addAnnotations(
       })),
     )
     .sort((a, b) => severity(a) - severity(b));
+
+  console.log(allAnnotations);
 
   function severity(a: GitHubAnnotation): number {
     switch (a.annotation_level) {
