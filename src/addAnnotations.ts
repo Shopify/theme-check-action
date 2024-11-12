@@ -165,7 +165,7 @@ export async function addAnnotations(
   console.log('Updating GitHub Checks...');
 
   // Push annotations
-  await Promise.all(
+  const checksUpdateResult = await Promise.all(
     annotationsChunks.map(async (annotations) =>
       octokit.rest.checks.update({
         owner: ctx.repo.owner,
@@ -179,6 +179,8 @@ export async function addAnnotations(
       }),
     ),
   );
+
+  console.log(util.inspect(checksUpdateResult, false, null, true /* enable colors */))
 
   // Add final report
   await octokit.rest.checks.update({
