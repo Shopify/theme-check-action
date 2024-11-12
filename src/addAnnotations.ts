@@ -115,6 +115,16 @@ export async function addAnnotations(
 
   const root = path.resolve(cwd, themeRoot);
 
+  console.log('Apply diff filter');
+  console.log({
+    root,
+    fileDiff,
+    result: getDiffFilter(
+        root,
+        fileDiff?.map((x) => path.join(cwd, x)),
+    ),
+  });
+
   const result: ThemeCheckReport[] = reports.filter(
     getDiffFilter(
       root,
