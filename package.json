@@ -5,22 +5,26 @@
     "step:install": "scripts/run-step installCli",
     "step:check:json": "scripts/run-step runChecksJson",
     "step:check:text": "scripts/run-step runChecksText",
-    "step:config": "scripts/run-step getConfigContents"
+    "step:config": "scripts/run-step getConfigContents",
+    "format": "prettier . --write"
   },
   "devDependencies": {
+    "@octokit/plugin-rest-endpoint-methods": "^13.2.6",
+    "@octokit/webhooks-types": "^7.6.1",
     "@types/common-tags": "^1.8.1",
-    "@types/node": "10.17.60",
+    "@types/node": "22.9.0",
     "@types/semver": "^7.5.6",
     "@vercel/ncc": "^0.38.1",
+    "prettier": "^3.3.3",
     "ts-node": "^10.9.2",
-    "typescript": "^4.5.5"
+    "typescript": "^5.6.3"
   },
   "dependencies": {
     "@actions/core": "^1.10.0",
     "@actions/exec": "^1.1.1",
-    "@actions/github": "^5.1.1",
-    "@octokit/plugin-throttling": "^3.5.2",
-    "@octokit/rest": "^18.12.0",
+    "@actions/github": "^6.0.0",
+    "@octokit/plugin-throttling": "^9.3.2",
+    "@octokit/rest": "^20.1.1",
     "common-tags": "^1.8.2",
     "semver": "^7.5.4"
   }
