@@ -143,10 +143,12 @@ export async function addAnnotations(
     )
     .sort((a, b) => severityLevel(a) - severityLevel(b));
 
-  const errorCount = result.map((x) => x.errorCount).reduce((a, b) => a + b, 0);
-  const warningCount = result
-    .map((x) => x.warningCount)
-    .reduce((a, b) => a + b, 0);
+  const { errorCount, warningCount } = result.reduce((report, acc) => {
+    acc.errorCount += report.errorCount;
+    acc.warningCount += report.warningCount;
+
+    return acc;
+  }, { errorCount: 0, warningCount: 0 });
 
   // This is Octokit/Checks API annotations limit
   // https://docs.github.com/en/developers/apps/guides/creating-ci-tests-with-the-checks-api#step-24-collecting-rubocop-errors
