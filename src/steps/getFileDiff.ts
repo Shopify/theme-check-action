@@ -13,12 +13,7 @@ export async function getFileDiff(
   });
   const { stdout } = await getExecOutput(
     'git',
-    [
-      'diff',
-      '--name-only',
-      '--diff-filter=ACMRTUB',
-      `origin/${baseBranch}`,
-    ],
+    ['diff', '--name-only', '--diff-filter=ACMRTUB', `origin/${baseBranch}`],
     {
       cwd: gitRoot,
       silent: true,

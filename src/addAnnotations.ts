@@ -5,23 +5,24 @@ import { throttling } from '@octokit/plugin-throttling';
 import { Octokit } from '@octokit/rest';
 import { stripIndent as markdown } from 'common-tags';
 import * as path from 'path';
-import * as util from "util";
+import * as util from 'util';
 
 import type { ThemeCheckReport, ThemeCheckOffense } from './types';
-import type { RestEndpointMethodTypes } from "@octokit/plugin-rest-endpoint-methods";
+import type { RestEndpointMethodTypes } from '@octokit/plugin-rest-endpoint-methods';
 import type { PullRequestEvent } from '@octokit/webhooks-types';
 
 const ThrottledOctokit = Octokit.plugin(throttling);
 
 const CHECK_NAME = 'Theme Check Report';
 
-type GitHubAnnotation = NonNullable<NonNullable<RestEndpointMethodTypes["checks"]["update"]["parameters"]['output']>['annotations']>[number]
+type GitHubAnnotation = NonNullable<
+  NonNullable<
+    RestEndpointMethodTypes['checks']['update']['parameters']['output']
+  >['annotations']
+>[number];
 
 const SeverityConversion: {
-  [k in ThemeCheckOffense['severity']]:
-    | 'failure'
-    | 'warning'
-    | 'notice';
+  [k in ThemeCheckOffense['severity']]: 'failure' | 'warning' | 'notice';
 } = {
   error: 'failure',
   warning: 'warning',
@@ -65,10 +66,7 @@ function getDiffFilter(
   }
 
   return (report) => {
-    return (
-      report.path.startsWith(themeRoot) &&
-      fileDiff.includes(report.path)
-    );
+    return report.path.startsWith(themeRoot) && fileDiff.includes(report.path);
   };
 }
 
@@ -90,7 +88,7 @@ export async function addAnnotations(
     throttle: {
       onRateLimit: (retryAfter, options, octokit, retryCount) => {
         octokit.log.warn(
-            `Request quota exhausted for request ${options.method} ${options.url}`,
+          `Request quota exhausted for request ${options.method} ${options.url}`,
         );
 
         if (retryCount < 1) {
@@ -102,7 +100,7 @@ export async function addAnnotations(
       onSecondaryRateLimit: (_, options, octokit) => {
         // does not retry, only logs a warning
         octokit.log.warn(
-            `SecondaryRateLimit detected for request ${options.method} ${options.url}`,
+          `SecondaryRateLimit detected for request ${options.method} ${options.url}`,
         );
       },
     },
@@ -111,18 +109,21 @@ export async function addAnnotations(
   console.log('Creating GitHub check...');
 
   const result: ThemeCheckReport[] = reports.filter(
-      getDiffFilter(
-          path.resolve(cwd, themeRoot),
-          fileDiff?.map((x) => path.join(cwd, x)),
-      ),
+    getDiffFilter(
+      path.resolve(cwd, themeRoot),
+      fileDiff?.map((x) => path.join(cwd, x)),
+    ),
   );
 
   // Create check
-  const prPayload = github.context.payload as PullRequestEvent
+  const prPayload = github.context.payload as PullRequestEvent;
   const check = await octokit.rest.checks.create({
     ...ctx.repo,
     name: CHECK_NAME,
-    head_sha: github.context.eventName == 'pull_request' ? prPayload.pull_request.head.sha : github.context.sha,
+    head_sha:
+      github.context.eventName == 'pull_request'
+        ? prPayload.pull_request.head.sha
+        : github.context.sha,
     status: 'in_progress',
   });
 
@@ -130,25 +131,21 @@ export async function addAnnotations(
     .flatMap((report) =>
       report.offenses.map((offense) => ({
         path: path.relative(cwd, path.resolve(report.path)),
-            start_line: offense.start_row + 1,
-          end_line: offense.end_row + 1,
-          start_column:
-        offense.start_row == offense.end_row
+        start_line: offense.start_row + 1,
+        end_line: offense.end_row + 1,
+        start_column:
+          offense.start_row == offense.end_row
             ? offense.start_column
             : undefined,
-            end_column:
-        offense.start_row == offense.end_row
-            ? offense.end_column
-            : undefined,
-            annotation_level: SeverityConversion[offense.severity],
-          message: `[${offense.check}] ${offense.message}`,
+        end_column:
+          offense.start_row == offense.end_row ? offense.end_column : undefined,
+        annotation_level: SeverityConversion[offense.severity],
+        message: `[${offense.check}] ${offense.message}`,
       })),
     )
     .sort((a, b) => severityLevel(a) - severityLevel(b));
 
-  const errorCount = result
-    .map((x) => x.errorCount)
-    .reduce((a, b) => a + b, 0);
+  const errorCount = result.map((x) => x.errorCount).reduce((a, b) => a + b, 0);
   const warningCount = result
     .map((x) => x.warningCount)
     .reduce((a, b) => a + b, 0);
@@ -175,7 +172,7 @@ export async function addAnnotations(
   );
 
   // Add final report
-  const checksUpdateResult =  await octokit.rest.checks.update({
+  const checksUpdateResult = await octokit.rest.checks.update({
     ...ctx.repo,
     check_run_id: check.data.id,
     name: CHECK_NAME,
@@ -200,5 +197,12 @@ export async function addAnnotations(
     },
   });
 
-  console.log(util.inspect(checksUpdateResult.data, false, null, true /* enable colors */))
+  console.log(
+    util.inspect(
+      checksUpdateResult.data,
+      false,
+      null,
+      true /* enable colors */,
+    ),
+  );
 }

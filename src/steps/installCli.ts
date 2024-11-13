@@ -20,9 +20,7 @@ export async function installCli(version?: string) {
       '--no-package-lock',
       '--no-save',
       `@shopify/cli${versionSuffix}`,
-      shouldIncludeTheme(version)
-        ? `@shopify/theme${versionSuffix}`
-        : '',
+      shouldIncludeTheme(version) ? `@shopify/theme${versionSuffix}` : '',
     ].filter(Boolean),
   );
 }
