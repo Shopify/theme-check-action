@@ -8,7 +8,7 @@ import * as path from 'path';
 
 import type { ThemeCheckReport, ThemeCheckOffense } from './types';
 import type { RestEndpointMethodTypes } from '@octokit/plugin-rest-endpoint-methods';
-import type { PullRequestEvent } from '@octokit/webhooks-types';
+import type { PullRequest } from '@octokit/webhooks-types';
 
 const ThrottledOctokit = Octokit.plugin(throttling);
 
@@ -114,14 +114,11 @@ export async function addAnnotations(
   );
 
   // Create check
-  const prPayload = github.context.payload as PullRequestEvent;
+  const pullRequestPayload = github.context.payload.pull_request as PullRequest | undefined;
   const check = await octokit.rest.checks.create({
     ...ctx.repo,
     name: CHECK_NAME,
-    head_sha:
-      github.context.eventName == 'pull_request'
-        ? prPayload.pull_request.head.sha
-        : github.context.sha,
+    head_sha: pullRequestPayload?.head.sha ?? github.context.sha,
     status: 'in_progress',
   });
 
