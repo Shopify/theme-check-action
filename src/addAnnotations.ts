@@ -1,11 +1,10 @@
 import * as core from '@actions/core';
 import * as github from '@actions/github';
 import { getOctokitOptions } from '@actions/github/lib/utils';
-import { throttling } from '@octokit/plugin-throttling';
+import { throttling, type ThrottlingOptions } from '@octokit/plugin-throttling';
 import { Octokit } from '@octokit/rest';
 import { stripIndent as markdown } from 'common-tags';
 import * as path from 'path';
-import * as util from 'util';
 
 import type { ThemeCheckReport, ThemeCheckOffense } from './types';
 import type { RestEndpointMethodTypes } from '@octokit/plugin-rest-endpoint-methods';
@@ -82,7 +81,6 @@ export async function addAnnotations(
   const themeRoot = core.getInput('theme_root');
   const version = core.getInput('version');
   const flags = core.getInput('flags');
-
   const octokit = new ThrottledOctokit({
     ...getOctokitOptions(ghToken),
     throttle: {
@@ -103,7 +101,7 @@ export async function addAnnotations(
           `SecondaryRateLimit detected for request ${options.method} ${options.url}`,
         );
       },
-    },
+    } satisfies ThrottlingOptions,
   });
 
   console.log('Creating GitHub check...');
@@ -172,7 +170,7 @@ export async function addAnnotations(
   );
 
   // Add final report
-  const checksUpdateResult = await octokit.rest.checks.update({
+  await octokit.rest.checks.update({
     ...ctx.repo,
     check_run_id: check.data.id,
     name: CHECK_NAME,
@@ -196,13 +194,4 @@ export async function addAnnotations(
           `.replace('__CONFIG_CONTENT__', configContent),
     },
   });
-
-  console.log(
-    util.inspect(
-      checksUpdateResult.data,
-      false,
-      null,
-      true /* enable colors */,
-    ),
-  );
 }
