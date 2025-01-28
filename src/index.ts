@@ -1,52 +1,42 @@
-import * as core from '@actions/core';
-import { installCli } from './steps/installCli';
-import { runChecksJson } from './steps/runChecksJson';
-import { runChecksText } from './steps/runChecksText';
-import { getConfigContents } from './steps/getConfigContents';
-import { getFileDiff } from './steps/getFileDiff';
-import { addAnnotations } from './addAnnotations';
-import * as semver from 'semver';
+import * as core from "@actions/core";
+import { installCli } from "./steps/installCli";
+import { runChecksJson } from "./steps/runChecksJson";
+import { runChecksText } from "./steps/runChecksText";
+import { getConfigContents } from "./steps/getConfigContents";
+import { getFileDiff } from "./steps/getFileDiff";
+import { addAnnotations } from "./addAnnotations";
+import * as semver from "semver";
 
 async function run() {
   const cwd = process.cwd();
   const shopifyExecutable = `${cwd}/node_modules/.bin/shopify`;
 
   // This is mockable with process.env.INPUT_ALL_CAPS_NAME
-  const themeRoot = core.getInput('theme_root') || cwd;
-  const version = core.getInput('version') || '';
-  const flags = core.getInput('flags') || '';
-  const ghToken = core.getInput('token');
-  const base = core.getInput('base');
+  const themeRoot = core.getInput("theme_root") || cwd;
+  const version = core.getInput("version") || "";
+  const flags = core.getInput("flags") || "";
+  const ghToken = core.getInput("token");
+  const base = core.getInput("base");
   const devPreview = requiresDevPreview(version);
 
   try {
     await installCli(version);
     if (ghToken) {
-      const [{ report, exitCode }, configContent, fileDiff] =
-        await Promise.all([
-          runChecksJson(
-            themeRoot,
-            shopifyExecutable,
-            devPreview,
-            flags,
-          ),
+      const [{ report, exitCode }, configContent, fileDiff] = await Promise.all(
+        [
+          runChecksJson(themeRoot, shopifyExecutable, devPreview, flags),
           getConfigContents(themeRoot, shopifyExecutable, devPreview),
           getFileDiff(base, cwd),
-        ]);
-      await addAnnotations(
-        report,
-        exitCode,
-        configContent,
-        ghToken,
-        fileDiff,
+        ]
       );
+      await addAnnotations(report, exitCode, configContent, ghToken, fileDiff);
       process.exit(exitCode);
     } else {
       const { exitCode } = await runChecksText(
         themeRoot,
         shopifyExecutable,
         devPreview,
-        flags,
+        flags
       );
       process.exit(exitCode);
     }
@@ -58,9 +48,7 @@ async function run() {
 
 function requiresDevPreview(version: string) {
   return (
-    !!version &&
-    semver.gte(version, '3.50.0') &&
-    semver.lt(version, '3.55.0')
+    !!version && semver.gte(version, "3.50.0") && semver.lt(version, "3.55.0")
   );
 }
 

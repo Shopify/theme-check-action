@@ -1,34 +1,36 @@
-import { exec } from '@actions/exec';
-import * as semver from 'semver';
+import { exec } from "@actions/exec";
+import * as semver from "semver";
+import { runChecksJson } from "./runChecksJson";
 
-const MIN_VERSION = '3.50.0';
-const MAX_THEME_VERSION = '3.59.0';
+const MIN_VERSION = "3.50.0";
+const MAX_THEME_VERSION = "3.59.0";
 
 export async function installCli(version?: string) {
-  const versionSuffix = version ? `@${version}` : '';
+  const versionSuffix = version ? `@${version}` : "";
 
   if (!isValidVersion(version)) {
     throw new Error(
-      `Shopify CLI version: ${version} is invalid or smaller than ${MIN_VERSION}`,
+      `Shopify CLI version: ${version} is invalid or smaller than ${MIN_VERSION}`
     );
   }
 
   await exec(
-    'npm',
+    "npm",
     [
-      'install',
-      '--no-package-lock',
-      '--no-save',
+      "install",
+      "--no-package-lock",
+      "--no-save",
       `@shopify/cli${versionSuffix}`,
-      shouldIncludeTheme(version)
-        ? `@shopify/theme${versionSuffix}`
-        : '',
-    ].filter(Boolean),
+      shouldIncludeTheme(version) ? `@shopify/theme${versionSuffix}` : "",
+    ].filter(Boolean)
   );
+
+  const waiting = await exec(`npm list @shopify/cli`);
+  console.log({ waiting });
 }
 
 function shouldIncludeTheme(version?: string) {
-  if (!version || version.includes('experimental')) {
+  if (!version || version.includes("experimental")) {
     return false;
   }
 
@@ -47,7 +49,7 @@ function shouldIncludeTheme(version?: string) {
 }
 
 function isValidVersion(version?: string): boolean {
-  if (!version || version.includes('experimental')) {
+  if (!version || version.includes("experimental")) {
     return true;
   }
 
