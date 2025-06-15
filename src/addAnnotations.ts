@@ -30,7 +30,6 @@ function splitEvery<T>(n: number, array: T[]): T[][] {
   return array.reduce((acc: T[][], v, i) => {
     if (i % n === 0) acc.push([v]);
     else acc[acc.length - 1].push(v);
-
     return acc;
   }, []);
 }
@@ -94,7 +93,6 @@ export async function addAnnotations(
   );
 
   // Create check
-
   const prPayload = github.context.payload as PullRequestEvent
   const check = await octokit.rest.checks.create({
     ...ctx.repo,
