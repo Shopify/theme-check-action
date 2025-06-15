@@ -22,14 +22,24 @@ async function run() {
   try {
     await installCli(version);
     if (ghToken) {
-      const [{ report, exitCode }, configContent, fileDiff] = await Promise.all(
-        [
-          runChecksJson(themeRoot, shopifyExecutable, devPreview, flags),
+      const [{ report, exitCode }, configContent, fileDiff] =
+        await Promise.all([
+          runChecksJson(
+            themeRoot,
+            shopifyExecutable,
+            devPreview,
+            flags,
+          ),
           getConfigContents(themeRoot, shopifyExecutable, devPreview),
           getFileDiff(base, cwd),
-        ],
+        ]);
+      await addAnnotations(
+        report,
+        exitCode,
+        configContent,
+        ghToken,
+        fileDiff,
       );
-      await addAnnotations(report, exitCode, configContent, ghToken, fileDiff);
       process.exit(exitCode);
     } else {
       const { exitCode } = await runChecksText(
@@ -48,7 +58,9 @@ async function run() {
 
 function requiresDevPreview(version: string) {
   return (
-    !!version && semver.gte(version, '3.50.0') && semver.lt(version, '3.55.0')
+    !!version &&
+    semver.gte(version, '3.50.0') &&
+    semver.lt(version, '3.55.0')
   );
 }
 

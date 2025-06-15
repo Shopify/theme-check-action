@@ -5,8 +5,7 @@
     "step:install": "scripts/run-step installCli",
     "step:check:json": "scripts/run-step runChecksJson",
     "step:check:text": "scripts/run-step runChecksText",
-    "step:config": "scripts/run-step getConfigContents",
-    "format": "prettier . --write"
+    "step:config": "scripts/run-step getConfigContents"
   },
   "devDependencies": {
     "@octokit/plugin-rest-endpoint-methods": "^13.2.6",
@@ -15,7 +14,6 @@
     "@types/node": "22.9.0",
     "@types/semver": "^7.5.6",
     "@vercel/ncc": "^0.38.1",
-    "prettier": "^3.3.3",
     "ts-node": "^10.9.2",
     "typescript": "^5.6.3"
   },

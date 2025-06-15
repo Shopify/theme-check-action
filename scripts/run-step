@@ -9,12 +9,18 @@ async function run() {
     process.exit(1);
   }
 
-  const step = require(path.join(__dirname, '..', 'src', 'steps', stepName))[
-    stepName
-  ];
+  const step = require(path.join(
+    __dirname,
+    '..',
+    'src',
+    'steps',
+    stepName,
+  ))[stepName];
   const result = await step(...args);
   console.log(
-    typeof result === 'string' ? result : JSON.stringify(result, null, 2),
+    typeof result === 'string'
+      ? result
+      : JSON.stringify(result, null, 2),
   );
 }
 

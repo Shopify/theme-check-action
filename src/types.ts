@@ -1,6 +1,6 @@
 export interface ThemeCheckOffense {
   check: string;
-  severity: 'error' | 'warning' | 'info';
+  severity: "error" | "warning" | "info";
   start_row: number;
   start_column: number;
   end_row: number;

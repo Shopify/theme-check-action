@@ -1,3 +1,4 @@
+
 Copyright 2020-present, Shopify Inc.
 
 Contains code from activesupport Copyright (c) 2005-2019 David Heinemeier Hansson

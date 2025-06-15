@@ -38,8 +38,8 @@ jobs:
 
 `shopify/theme-check-action@v2` accepts the following arguments:
 
-- `theme_root` - (optional, default: `'.'`) Path from repo root to the root of the theme (e.g. `'./dist'`).
-- `flags` - (optional) theme-check command line flags. (e.g. `'--fail-level suggestion'`)
-- `version` - (optional, default: latest) specific [Shopify CLI](https://shopify.dev/docs/storefronts/themes/tools/cli) `@shopify/theme` (`v3.50`+) to use.
-- `token` - (optional) result of `${{ github.token }}` to enable GitHub check annotations.
-- `base` - (optional) When `token` is set, only the files that contain a diff with this ref (branch, tag or commit) will have GitHub check annotations.
+* `theme_root` - (optional, default: `'.'`) Path from repo root to the root of the theme (e.g. `'./dist'`).
+* `flags` - (optional) theme-check command line flags. (e.g. `'--fail-level suggestion'`)
+* `version` - (optional, default: latest) specific [Shopify CLI](https://shopify.dev/docs/storefronts/themes/tools/cli) `@shopify/theme` (`v3.50`+) to use.
+* `token` - (optional) result of `${{ github.token }}` to enable GitHub check annotations.
+* `base` - (optional) When `token` is set, only the files that contain a diff with this ref (branch, tag or commit) will have GitHub check annotations.

@@ -1,27 +1,27 @@
 import * as core from '@actions/core';
 import * as github from '@actions/github';
-import { getOctokitOptions } from '@actions/github/lib/utils';
-import { throttling, type ThrottlingOptions } from '@octokit/plugin-throttling';
+import { GitHub, getOctokitOptions } from '@actions/github/lib/utils';
+import { throttling, ThrottlingOptions } from '@octokit/plugin-throttling';
+import { Context } from '@actions/github/lib/context';
 import { Octokit } from '@octokit/rest';
+import {  RestEndpointMethodTypes } from '@octokit/plugin-rest-endpoint-methods';
 import { stripIndent as markdown } from 'common-tags';
+import { ThemeCheckReport, ThemeCheckOffense } from './types';
 import * as path from 'path';
 
-import type { ThemeCheckReport, ThemeCheckOffense } from './types';
-import type { RestEndpointMethodTypes } from '@octokit/plugin-rest-endpoint-methods';
-import type { PullRequest } from '@octokit/webhooks-types';
+import type { PullRequest, PullRequestEvent } from '@octokit/webhooks-types';
 
 const ThrottledOctokit = Octokit.plugin(throttling);
 
 const CHECK_NAME = 'Theme Check Report';
 
-type GitHubAnnotation = NonNullable<
-  NonNullable<
-    RestEndpointMethodTypes['checks']['update']['parameters']['output']
-  >['annotations']
->[number];
+type GitHubAnnotation = NonNullable<NonNullable<RestEndpointMethodTypes["checks"]["update"]["parameters"]['output']>['annotations']>[number]
 
 const SeverityConversion: {
-  [k in ThemeCheckOffense['severity']]: 'failure' | 'warning' | 'notice';
+  [k in ThemeCheckOffense['severity']]:
+    | 'failure'
+    | 'warning'
+    | 'notice';
 } = {
   error: 'failure',
   warning: 'warning',
@@ -65,7 +65,10 @@ function getDiffFilter(
   }
 
   return (report) => {
-    return report.path.startsWith(themeRoot) && fileDiff.includes(report.path);
+    return (
+      report.path.startsWith(themeRoot) &&
+      fileDiff.includes(report.path)
+    );
   };
 }
 
@@ -86,7 +89,7 @@ export async function addAnnotations(
     throttle: {
       onRateLimit: (retryAfter, options, octokit, retryCount) => {
         octokit.log.warn(
-          `Request quota exhausted for request ${options.method} ${options.url}`,
+            `Request quota exhausted for request ${options.method} ${options.url}`,
         );
 
         if (retryCount < 1) {
@@ -98,7 +101,7 @@ export async function addAnnotations(
       onSecondaryRateLimit: (_, options, octokit) => {
         // does not retry, only logs a warning
         octokit.log.warn(
-          `SecondaryRateLimit detected for request ${options.method} ${options.url}`,
+            `SecondaryRateLimit detected for request ${options.method} ${options.url}`,
         );
       },
     } satisfies ThrottlingOptions,
@@ -107,18 +110,19 @@ export async function addAnnotations(
   console.log('Creating GitHub check...');
 
   const result: ThemeCheckReport[] = reports.filter(
-    getDiffFilter(
-      path.resolve(cwd, themeRoot),
-      fileDiff?.map((x) => path.join(cwd, x)),
-    ),
+      getDiffFilter(
+          path.resolve(cwd, themeRoot),
+          fileDiff?.map((x) => path.join(cwd, x)),
+      ),
   );
 
   // Create check
-  const pullRequestPayload = github.context.payload.pull_request as PullRequest | undefined;
+
+  const prPayload = github.context.payload as PullRequestEvent
   const check = await octokit.rest.checks.create({
     ...ctx.repo,
     name: CHECK_NAME,
-    head_sha: pullRequestPayload?.head.sha ?? github.context.sha,
+    head_sha: github.context.eventName == 'pull_request' ? prPayload.pull_request.head.sha : github.context.sha,
     status: 'in_progress',
   });
 
@@ -126,16 +130,18 @@ export async function addAnnotations(
     .flatMap((report) =>
       report.offenses.map((offense) => ({
         path: path.relative(cwd, path.resolve(report.path)),
-        start_line: offense.start_row + 1,
-        end_line: offense.end_row + 1,
-        start_column:
-          offense.start_row == offense.end_row
+            start_line: offense.start_row + 1,
+          end_line: offense.end_row + 1,
+          start_column:
+        offense.start_row == offense.end_row
             ? offense.start_column
             : undefined,
-        end_column:
-          offense.start_row == offense.end_row ? offense.end_column : undefined,
-        annotation_level: SeverityConversion[offense.severity],
-        message: `[${offense.check}] ${offense.message}`,
+            end_column:
+        offense.start_row == offense.end_row
+            ? offense.end_column
+            : undefined,
+            annotation_level: SeverityConversion[offense.severity],
+          message: `[${offense.check}] ${offense.message}`,
       })),
     )
     .sort((a, b) => severityLevel(a) - severityLevel(b));
