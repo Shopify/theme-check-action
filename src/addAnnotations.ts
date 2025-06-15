@@ -2,7 +2,6 @@ import * as core from '@actions/core';
 import * as github from '@actions/github';
 import { GitHub, getOctokitOptions } from '@actions/github/lib/utils';
 import { throttling } from '@octokit/plugin-throttling';
-import { Context } from '@actions/github/lib/context';
 import { Octokit } from '@octokit/rest';
 import type { RestEndpointMethodTypes } from '@octokit/plugin-rest-endpoint-methods';
 import type { PullRequestEvent } from '@octokit/webhooks-types';
@@ -56,7 +55,7 @@ export async function addAnnotations(
   fileDiff: string[] | undefined,
 ) {
   const cwd = process.cwd();
-  const ctx = github.context as Context;
+  const ctx = github.context;
   const themeRoot = core.getInput('theme_root');
   const version = core.getInput('version');
   const flags = core.getInput('flags');
@@ -89,7 +88,7 @@ export async function addAnnotations(
         );
       },
     },
-  }) as Octokit;
+  });
 
   console.log('Creating GitHub check...');
 
