@@ -30,11 +30,8 @@ const SeverityConversion: {
 
 function splitEvery<T>(n: number, array: T[]): T[][] {
   return array.reduce((acc: T[][], v, i) => {
-    if (i % n === 0) {
-      acc.push([v]);
-    } else {
-      acc[acc.length - 1].push(v);
-    }
+    if (i % n === 0) acc.push([v]);
+    else acc[acc.length - 1].push(v);
 
     return acc;
   }, []);
@@ -58,7 +55,7 @@ function severityLevel(annotation: GitHubAnnotation): number {
 
 function getDiffFilter(
   themeRoot: string,
-  fileDiff?: string[],
+  fileDiff: string[] | undefined,
 ): (report: ThemeCheckReport) => boolean {
   if (!fileDiff) {
     return () => true;
@@ -130,18 +127,18 @@ export async function addAnnotations(
     .flatMap((report) =>
       report.offenses.map((offense) => ({
         path: path.relative(cwd, path.resolve(report.path)),
-            start_line: offense.start_row + 1,
-          end_line: offense.end_row + 1,
-          start_column:
-        offense.start_row == offense.end_row
+        start_line: offense.start_row + 1,
+        end_line: offense.end_row + 1,
+        start_column:
+          offense.start_row == offense.end_row
             ? offense.start_column
             : undefined,
-            end_column:
-        offense.start_row == offense.end_row
+        end_column:
+          offense.start_row == offense.end_row
             ? offense.end_column
             : undefined,
-            annotation_level: SeverityConversion[offense.severity],
-          message: `[${offense.check}] ${offense.message}`,
+        annotation_level: SeverityConversion[offense.severity],
+        message: `[${offense.check}] ${offense.message}`,
       })),
     )
     .sort((a, b) => severityLevel(a) - severityLevel(b));
