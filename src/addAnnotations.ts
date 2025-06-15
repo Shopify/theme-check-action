@@ -4,6 +4,7 @@ import { GitHub, getOctokitOptions } from '@actions/github/lib/utils';
 import { throttling } from '@octokit/plugin-throttling';
 import { Context } from '@actions/github/lib/context';
 import { Octokit } from '@octokit/rest';
+import type { PullRequestEvent } from '@octokit/webhooks-types';
 import { stripIndent as markdown } from 'common-tags';
 import { ThemeCheckReport, ThemeCheckOffense } from './types';
 import * as path from 'path';
@@ -36,10 +37,7 @@ interface GitHubAnnotation {
 }
 
 const SeverityConversion: {
-  [k in ThemeCheckOffense['severity']]:
-    | 'failure'
-    | 'warning'
-    | 'notice';
+  [k in ThemeCheckOffense['severity']]: 'failure' | 'warning' | 'notice';
 } = {
   error: 'failure',
   warning: 'warning',
@@ -60,10 +58,7 @@ function getDiffFilter(
 ): (report: ThemeCheckReport) => boolean {
   if (!fileDiff) return () => true;
   return (report) => {
-    return (
-      report.path.startsWith(themeRoot) &&
-      fileDiff.includes(report.path)
-    );
+    return report.path.startsWith(themeRoot) && fileDiff.includes(report.path);
   };
 }
 
@@ -79,15 +74,10 @@ export async function addAnnotations(
   const themeRoot = core.getInput('theme_root');
   const version = core.getInput('version');
   const flags = core.getInput('flags');
-
   const octokit = new ThrottledOctokit({
     ...getOctokitOptions(ghToken),
     throttle: {
-      onRateLimit: (
-        retryAfter: number,
-        options: any,
-        octokit: Octokit,
-      ) => {
+      onRateLimit: (retryAfter: number, options: any, octokit: Octokit) => {
         octokit.log.warn(
           `Request quota exhausted for request ${options.method} ${options.url}`,
         );
@@ -98,11 +88,7 @@ export async function addAnnotations(
           return true;
         }
       },
-      onAbuseLimit: (
-        _retryAfter: number,
-        options: any,
-        octokit: Octokit,
-      ) => {
+      onAbuseLimit: (_retryAfter: number, options: any, octokit: Octokit) => {
         // does not retry, only logs a warning
         octokit.log.warn(
           `Abuse detected for request ${options.method} ${options.url}`,
@@ -113,28 +99,29 @@ export async function addAnnotations(
 
   console.log('Creating GitHub check...');
 
-  const root = path.resolve(cwd, themeRoot);
-
   const result: ThemeCheckReport[] = reports.filter(
     getDiffFilter(
-      root,
+      path.resolve(cwd, themeRoot),
       fileDiff?.map((x) => path.join(cwd, x)),
     ),
   );
 
   // Create check
+  const prPayload = github.context.payload as PullRequestEvent;
   const check = await octokit.rest.checks.create({
-    owner: ctx.repo.owner,
-    repo: ctx.repo.repo,
+    ...ctx.repo,
     name: CHECK_NAME,
-    head_sha: ctx.sha,
+    head_sha:
+      github.context.eventName == 'pull_request'
+        ? prPayload.pull_request.head.sha
+        : github.context.sha,
     status: 'in_progress',
   });
 
   const allAnnotations: GitHubAnnotation[] = result
-    .flatMap((report: ThemeCheckReport) =>
+    .flatMap((report) =>
       report.offenses.map((offense) => ({
-        path: path.relative(root, path.resolve(report.path)),
+        path: path.relative(cwd, path.resolve(report.path)),
         start_line: offense.start_row + 1,
         end_line: offense.end_row + 1,
         start_column:
@@ -142,9 +129,7 @@ export async function addAnnotations(
             ? offense.start_column
             : undefined,
         end_column:
-          offense.start_row == offense.end_row
-            ? offense.end_column
-            : undefined,
+          offense.start_row == offense.end_row ? offense.end_column : undefined,
         annotation_level: SeverityConversion[offense.severity],
         message: `[${offense.check}] ${offense.message}`,
       })),
@@ -164,9 +149,7 @@ export async function addAnnotations(
     }
   }
 
-  const errorCount = result
-    .map((x) => x.errorCount)
-    .reduce((a, b) => a + b, 0);
+  const errorCount = result.map((x) => x.errorCount).reduce((a, b) => a + b, 0);
   const warningCount = result
     .map((x) => x.warningCount)
     .reduce((a, b) => a + b, 0);
@@ -181,8 +164,7 @@ export async function addAnnotations(
   await Promise.all(
     annotationsChunks.map(async (annotations) =>
       octokit.rest.checks.update({
-        owner: ctx.repo.owner,
-        repo: ctx.repo.repo,
+        ...ctx.repo,
         check_run_id: check.data.id,
         output: {
           title: CHECK_NAME,
@@ -195,11 +177,9 @@ export async function addAnnotations(
 
   // Add final report
   await octokit.rest.checks.update({
-    owner: ctx.repo.owner,
-    repo: ctx.repo.repo,
+    ...ctx.repo,
     check_run_id: check.data.id,
     name: CHECK_NAME,
-    status: 'completed',
     conclusion: exitCode > 0 ? 'failure' : 'success',
     output: {
       title: CHECK_NAME,

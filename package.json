@@ -5,13 +5,16 @@
     "step:install": "scripts/run-step installCli",
     "step:check:json": "scripts/run-step runChecksJson",
     "step:check:text": "scripts/run-step runChecksText",
-    "step:config": "scripts/run-step getConfigContents"
+    "step:config": "scripts/run-step getConfigContents",
+    "format": "prettier . --write"
   },
   "devDependencies": {
+    "@octokit/webhooks-types": "^7.6.1",
     "@types/common-tags": "^1.8.1",
     "@types/node": "10.17.60",
     "@types/semver": "^7.5.6",
     "@vercel/ncc": "^0.38.1",
+    "prettier": "^3.5.3",
     "ts-node": "^10.9.2",
     "typescript": "^4.5.5"
   },

@@ -179,6 +179,11 @@
   dependencies:
     "@octokit/openapi-types" "^12.11.0"
 
+"@octokit/webhooks-types@^7.6.1":
+  version "7.6.1"
+  resolved "https://registry.yarnpkg.com/@octokit/webhooks-types/-/webhooks-types-7.6.1.tgz#bc96371057c2d54c982c9f8f642655b26cd588eb"
+  integrity sha512-S8u2cJzklBC0FgTwWVLaM8tMrDuDMVE4xiTK4EYXM9GntyvrdbSoxqDQa+Fh57CCNApyIpyeqPhhFEmHPfrXgw==
+
 "@tsconfig/node10@^1.0.7":
   version "1.0.9"
   resolved "https://registry.npmjs.org/@tsconfig/node10/-/node10-1.0.9.tgz#df4907fc07a886922637b15e02d4cebc4c0021b2"
@@ -294,6 +299,11 @@ once@^1.4.0:
   integrity sha512-lNaJgI+2Q5URQBkccEKHTQOPaXdUxnZZElQTZY0MFUAuaEqe1E+Nyvgdz/aIyNi6Z9MzO5dv1H8n58/GELp3+w==
   dependencies:
     wrappy "1"
+
+prettier@^3.5.3:
+  version "3.5.3"
+  resolved "https://registry.yarnpkg.com/prettier/-/prettier-3.5.3.tgz#4fc2ce0d657e7a02e602549f053b239cb7dfe1b5"
+  integrity sha512-QQtaxnoDJeAkDvDKWCLiwIXkTgRhwYDEQCghU9Z6q03iyek/rxRh/2lC3HB7P8sWT2xC/y5JDctPLBIGzHKbhw==
 
 semver@^7.5.4:
   version "7.5.4"

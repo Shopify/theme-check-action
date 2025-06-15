@@ -4,9 +4,9 @@ We love receiving pull requests!
 
 ## Standards
 
-* PR should explain what the feature does, and why the change exists.
-* PR should include any carrier specific documentation explaining how it works.
-* Code should be generic and reusable.
+- PR should explain what the feature does, and why the change exists.
+- PR should include any carrier specific documentation explaining how it works.
+- Code should be generic and reusable.
 
 ## How to contribute
 
