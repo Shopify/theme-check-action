@@ -1,15 +1,13 @@
 import * as core from '@actions/core';
 import * as github from '@actions/github';
-import { GitHub, getOctokitOptions } from '@actions/github/lib/utils';
+import { getOctokitOptions } from '@actions/github/lib/utils';
 import { throttling, ThrottlingOptions } from '@octokit/plugin-throttling';
-import { Context } from '@actions/github/lib/context';
 import { Octokit } from '@octokit/rest';
 import {  RestEndpointMethodTypes } from '@octokit/plugin-rest-endpoint-methods';
+import type { PullRequestEvent } from '@octokit/webhooks-types';
 import { stripIndent as markdown } from 'common-tags';
 import { ThemeCheckReport, ThemeCheckOffense } from './types';
 import * as path from 'path';
-
-import type { PullRequest, PullRequestEvent } from '@octokit/webhooks-types';
 
 const ThrottledOctokit = Octokit.plugin(throttling);
 
@@ -35,22 +33,6 @@ function splitEvery<T>(n: number, array: T[]): T[][] {
 
     return acc;
   }, []);
-}
-
-function severityLevel(annotation: GitHubAnnotation): number {
-  switch (annotation.annotation_level) {
-    case 'notice':
-      return 2;
-
-    case 'warning':
-      return 1;
-
-    case 'failure':
-      return 0;
-
-    default:
-      return 3;
-  }
 }
 
 function getDiffFilter(
@@ -139,7 +121,20 @@ export async function addAnnotations(
         message: `[${offense.check}] ${offense.message}`,
       })),
     )
-    .sort((a, b) => severityLevel(a) - severityLevel(b));
+    .sort((a, b) => severity(a) - severity(b));
+
+  function severity(a: GitHubAnnotation): number {
+    switch (a.annotation_level) {
+      case 'notice':
+        return 2;
+      case 'warning':
+        return 1;
+      case 'failure':
+        return 0;
+      default:
+        return 3;
+    }
+  }
 
   const errorCount = result
     .map((x) => x.errorCount)
