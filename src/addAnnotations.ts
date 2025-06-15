@@ -1,6 +1,6 @@
 import * as core from '@actions/core';
 import * as github from '@actions/github';
-import { getOctokitOptions } from '@actions/github/lib/utils';
+import { GitHub, getOctokitOptions } from '@actions/github/lib/utils';
 import { throttling } from '@octokit/plugin-throttling';
 import { Context } from '@actions/github/lib/context';
 import { Octokit } from '@octokit/rest';
@@ -9,7 +9,7 @@ import { stripIndent as markdown } from 'common-tags';
 import { ThemeCheckReport, ThemeCheckOffense } from './types';
 import * as path from 'path';
 
-const ThrottledOctokit = Octokit.plugin(throttling);
+const ThrottledOctokit = GitHub.plugin(throttling);
 
 const CHECK_NAME = 'Theme Check Report';
 
