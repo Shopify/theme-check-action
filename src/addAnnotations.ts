@@ -1,7 +1,7 @@
 import * as core from '@actions/core';
 import * as github from '@actions/github';
 import { getOctokitOptions } from '@actions/github/lib/utils';
-import { throttling, ThrottlingOptions } from '@octokit/plugin-throttling';
+import { throttling } from '@octokit/plugin-throttling';
 import { Octokit } from '@octokit/rest';
 import {  RestEndpointMethodTypes } from '@octokit/plugin-rest-endpoint-methods';
 import type { PullRequestEvent } from '@octokit/webhooks-types';
@@ -63,24 +63,32 @@ export async function addAnnotations(
   const octokit = new ThrottledOctokit({
     ...getOctokitOptions(ghToken),
     throttle: {
-      onRateLimit: (retryAfter, options, octokit, retryCount) => {
+      onRateLimit: (
+        retryAfter: number,
+        options: any,
+        octokit: Octokit,
+      ) => {
         octokit.log.warn(
-            `Request quota exhausted for request ${options.method} ${options.url}`,
+          `Request quota exhausted for request ${options.method} ${options.url}`,
         );
 
-        if (retryCount < 1) {
+        if (options.request.retryCount === 0) {
           // only retries once
           octokit.log.info(`Retrying after ${retryAfter} seconds!`);
           return true;
         }
       },
-      onSecondaryRateLimit: (_, options, octokit) => {
+      onAbuseLimit: (
+        _retryAfter: number,
+        options: any,
+        octokit: Octokit,
+      ) => {
         // does not retry, only logs a warning
         octokit.log.warn(
-            `SecondaryRateLimit detected for request ${options.method} ${options.url}`,
+          `Abuse detected for request ${options.method} ${options.url}`,
         );
       },
-    } satisfies ThrottlingOptions,
+    },
   });
 
   console.log('Creating GitHub check...');
