@@ -57,9 +57,7 @@ function getDiffFilter(
   themeRoot: string,
   fileDiff: string[] | undefined,
 ): (report: ThemeCheckReport) => boolean {
-  if (!fileDiff) {
-    return () => true;
-  }
+  if (!fileDiff) return () => true;
 
   return (report) => {
     return (
@@ -107,10 +105,10 @@ export async function addAnnotations(
   console.log('Creating GitHub check...');
 
   const result: ThemeCheckReport[] = reports.filter(
-      getDiffFilter(
-          path.resolve(cwd, themeRoot),
-          fileDiff?.map((x) => path.join(cwd, x)),
-      ),
+    getDiffFilter(
+      path.resolve(cwd, themeRoot),
+      fileDiff?.map((x) => path.join(cwd, x)),
+    ),
   );
 
   // Create check
@@ -143,12 +141,12 @@ export async function addAnnotations(
     )
     .sort((a, b) => severityLevel(a) - severityLevel(b));
 
-  const { errorCount, warningCount } = result.reduce((report, acc) => {
-    acc.errorCount += report.errorCount;
-    acc.warningCount += report.warningCount;
-
-    return acc;
-  }, { errorCount: 0, warningCount: 0 });
+  const errorCount = result
+    .map((x) => x.errorCount)
+    .reduce((a, b) => a + b, 0);
+  const warningCount = result
+    .map((x) => x.warningCount)
+    .reduce((a, b) => a + b, 0);
 
   // This is Octokit/Checks API annotations limit
   // https://docs.github.com/en/developers/apps/guides/creating-ci-tests-with-the-checks-api#step-24-collecting-rubocop-errors
