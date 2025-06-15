@@ -37,10 +37,7 @@ interface GitHubAnnotation {
 }
 
 const SeverityConversion: {
-  [k in ThemeCheckOffense['severity']]:
-    | 'failure'
-    | 'warning'
-    | 'notice';
+  [k in ThemeCheckOffense['severity']]: 'failure' | 'warning' | 'notice';
 } = {
   error: 'failure',
   warning: 'warning',
@@ -61,10 +58,7 @@ function getDiffFilter(
 ): (report: ThemeCheckReport) => boolean {
   if (!fileDiff) return () => true;
   return (report) => {
-    return (
-      report.path.startsWith(themeRoot) &&
-      fileDiff.includes(report.path)
-    );
+    return report.path.startsWith(themeRoot) && fileDiff.includes(report.path);
   };
 }
 
@@ -83,11 +77,7 @@ export async function addAnnotations(
   const octokit = new ThrottledOctokit({
     ...getOctokitOptions(ghToken),
     throttle: {
-      onRateLimit: (
-        retryAfter: number,
-        options: any,
-        octokit: Octokit,
-      ) => {
+      onRateLimit: (retryAfter: number, options: any, octokit: Octokit) => {
         octokit.log.warn(
           `Request quota exhausted for request ${options.method} ${options.url}`,
         );
@@ -98,11 +88,7 @@ export async function addAnnotations(
           return true;
         }
       },
-      onAbuseLimit: (
-        _retryAfter: number,
-        options: any,
-        octokit: Octokit,
-      ) => {
+      onAbuseLimit: (_retryAfter: number, options: any, octokit: Octokit) => {
         // does not retry, only logs a warning
         octokit.log.warn(
           `Abuse detected for request ${options.method} ${options.url}`,
@@ -121,11 +107,14 @@ export async function addAnnotations(
   );
 
   // Create check
-  const prPayload = github.context.payload as PullRequestEvent
+  const prPayload = github.context.payload as PullRequestEvent;
   const check = await octokit.rest.checks.create({
     ...ctx.repo,
     name: CHECK_NAME,
-    head_sha: github.context.eventName == 'pull_request' ? prPayload.pull_request.head.sha : github.context.sha,
+    head_sha:
+      github.context.eventName == 'pull_request'
+        ? prPayload.pull_request.head.sha
+        : github.context.sha,
     status: 'in_progress',
   });
 
@@ -140,9 +129,7 @@ export async function addAnnotations(
             ? offense.start_column
             : undefined,
         end_column:
-          offense.start_row == offense.end_row
-            ? offense.end_column
-            : undefined,
+          offense.start_row == offense.end_row ? offense.end_column : undefined,
         annotation_level: SeverityConversion[offense.severity],
         message: `[${offense.check}] ${offense.message}`,
       })),
@@ -162,9 +149,7 @@ export async function addAnnotations(
     }
   }
 
-  const errorCount = result
-    .map((x) => x.errorCount)
-    .reduce((a, b) => a + b, 0);
+  const errorCount = result.map((x) => x.errorCount).reduce((a, b) => a + b, 0);
   const warningCount = result
     .map((x) => x.warningCount)
     .reduce((a, b) => a + b, 0);
