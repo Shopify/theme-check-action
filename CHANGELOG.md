@@ -1,4 +1,11 @@
 
+v2.1.3 / 2025-06-16
+==================
+
+  * Fix annotations for pull requests (#50)
+  * update github actions to commits (#56)
+  * Bump undici from 5.28.1 to 5.28.4 (#40)
+
 v2.1.2 / 2024-05-10
 ==================
 
