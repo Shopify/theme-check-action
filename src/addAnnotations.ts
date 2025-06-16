@@ -2,8 +2,8 @@ import * as core from '@actions/core';
 import * as github from '@actions/github';
 import { GitHub, getOctokitOptions } from '@actions/github/lib/utils';
 import { throttling } from '@octokit/plugin-throttling';
-import { Context } from '@actions/github/lib/context';
 import { Octokit } from '@octokit/rest';
+import type { RestEndpointMethodTypes } from '@octokit/plugin-rest-endpoint-methods';
 import type { PullRequestEvent } from '@octokit/webhooks-types';
 import { stripIndent as markdown } from 'common-tags';
 import { ThemeCheckReport, ThemeCheckOffense } from './types';
@@ -13,28 +13,7 @@ const ThrottledOctokit = GitHub.plugin(throttling);
 
 const CHECK_NAME = 'Theme Check Report';
 
-// It's really hard to get that type out of their SDK. output?annotations? prevents us from extracting it.
-// from node_modules/@octokit/openapi-types/types.d.ts
-interface GitHubAnnotation {
-  /** The path of the file to add an annotation to. For example, `assets/css/main.css`. */
-  path: string;
-  /** The start line of the annotation. */
-  start_line: number;
-  /** The end line of the annotation. */
-  end_line: number;
-  /** The start column of the annotation. Annotations only support `start_column` and `end_column` on the same line. Omit this parameter if `start_line` and `end_line` have different values. */
-  start_column?: number;
-  /** The end column of the annotation. Annotations only support `start_column` and `end_column` on the same line. Omit this parameter if `start_line` and `end_line` have different values. */
-  end_column?: number;
-  /** The level of the annotation. Can be one of `notice`, `warning`, or `failure`. */
-  annotation_level: 'notice' | 'warning' | 'failure';
-  /** A short description of the feedback for these lines of code. The maximum size is 64 KB. */
-  message: string;
-  /** The title that represents the annotation. The maximum size is 255 characters. */
-  title?: string;
-  /** Details about this annotation. The maximum size is 64 KB. */
-  raw_details?: string;
-}
+type GitHubAnnotation = NonNullable<NonNullable<RestEndpointMethodTypes['checks']['update']['parameters']['output']>['annotations']>[number]
 
 const SeverityConversion: {
   [k in ThemeCheckOffense['severity']]:
@@ -76,7 +55,7 @@ export async function addAnnotations(
   fileDiff: string[] | undefined,
 ) {
   const cwd = process.cwd();
-  const ctx = github.context as Context;
+  const ctx = github.context;
   const themeRoot = core.getInput('theme_root');
   const version = core.getInput('version');
   const flags = core.getInput('flags');
@@ -109,7 +88,7 @@ export async function addAnnotations(
         );
       },
     },
-  }) as Octokit;
+  });
 
   console.log('Creating GitHub check...');
 
