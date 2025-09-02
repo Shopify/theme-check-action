@@ -22,7 +22,7 @@ async function run() {
   try {
     await installCli(version);
     if (ghToken) {
-      const [{ report, exitCode }, configContent, fileDiff] =
+      const [{ report }, configContent, fileDiff] =
         await Promise.all([
           runChecksJson(
             themeRoot,
