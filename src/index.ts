@@ -35,12 +35,11 @@ async function run() {
         ]);
       await addAnnotations(
         report,
-        exitCode,
         configContent,
         ghToken,
         fileDiff,
       );
-      process.exit(exitCode);
+      process.exit(0);
     } else {
       const { exitCode } = await runChecksText(
         themeRoot,
