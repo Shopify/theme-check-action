@@ -1,3 +1,9 @@
+v2.2.0 / 2025-10-17
+==================
+
+  * Bump actions/checkout from 4.2.2 to 5.0.0 (#61)
+  * Use exit code 0 when a report is available (#62)
+  * Bump undici from 5.28.4 to 5.29.0 (#57)
 
 v2.1.3 / 2025-06-16
 ==================
