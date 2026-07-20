@@ -22,5 +22,5 @@ inputs:
     description: 'When token is set, only the files that contain a diff with this ref (branch, tag or commit) will have GitHub annotations.'
     required: false
 runs:
-  using: 'node20'
+  using: 'node24'
   main: 'dist/index.js'
