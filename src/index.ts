@@ -17,6 +17,7 @@ async function run() {
   const flags = core.getInput('flags') || '';
   const ghToken = core.getInput('token');
   const base = core.getInput('base');
+  const jsonReport = core.getBooleanInput('json_report');
   const devPreview = requiresDevPreview(version);
 
   try {
@@ -33,12 +34,22 @@ async function run() {
           getConfigContents(themeRoot, shopifyExecutable, devPreview),
           getFileDiff(base, cwd),
         ]);
+      core.setOutput('report', JSON.stringify(report));
       await addAnnotations(
         report,
         configContent,
         ghToken,
         fileDiff,
       );
+      process.exit(0);
+    } else if (jsonReport) {
+      const { report } = await runChecksJson(
+        themeRoot,
+        shopifyExecutable,
+        devPreview,
+        flags,
+      );
+      core.setOutput('report', JSON.stringify(report));
       process.exit(0);
     } else {
       const { exitCode } = await runChecksText(

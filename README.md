@@ -43,3 +43,18 @@ jobs:
 * `version` - (optional, default: latest) specific [Shopify CLI](https://shopify.dev/docs/storefronts/themes/tools/cli) `@shopify/theme` (`v3.50`+) to use.
 * `token` - (optional) result of `${{ github.token }}` to enable GitHub check annotations.
 * `base` - (optional) When `token` is set, only the files that contain a diff with this ref (branch, tag or commit) will have GitHub check annotations.
+* `json_report` - (optional, default: `false`) Run Theme Check in JSON mode and expose its report without requiring a token. Set this when another step will process the report without the action's GitHub annotations.
+
+The `report` action output contains the JSON-encoded Theme Check report when `token` or `json_report` is set. In JSON report mode, the action succeeds once a report is available so the next step can decide how to handle its findings. Pass the report to another step through an environment variable:
+
+```yml
+- name: Theme Check
+  id: theme-check
+  uses: shopify/theme-check-action@v2
+  with:
+    json_report: true
+- name: Process Theme Check report
+  env:
+    THEME_CHECK_REPORT: ${{ steps.theme-check.outputs.report }}
+  run: echo "$THEME_CHECK_REPORT" | jq '.[] | .offenses[]'
+```

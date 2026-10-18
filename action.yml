@@ -21,6 +21,13 @@ inputs:
   base:
     description: 'When token is set, only the files that contain a diff with this ref (branch, tag or commit) will have GitHub annotations.'
     required: false
+  json_report:
+    description: 'Run Theme Check in JSON mode and expose its report without requiring a token.'
+    required: false
+    default: 'false'
+outputs:
+  report:
+    description: 'JSON-encoded Theme Check report (available when token or json_report is set).'
 runs:
   using: 'node20'
   main: 'dist/index.js'

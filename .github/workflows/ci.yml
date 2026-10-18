@@ -20,6 +20,21 @@ jobs:
         with:
           flags: '--fail-level crash'
           theme_root: './dawn'
+          json_report: true
+
+      - name: Verify Theme Check report output
+        env:
+          THEME_CHECK_REPORT: ${{ steps.theme-check-action.outputs.report }}
+        run: |
+          node <<'NODE'
+          const report = JSON.parse(process.env.THEME_CHECK_REPORT);
+          if (
+            !Array.isArray(report) ||
+            report.some((item) => typeof item.path !== 'string' || !Array.isArray(item.offenses))
+          ) {
+            throw new Error('Expected a JSON array of Theme Check reports');
+          }
+          NODE
 
   check_dawn_with_flags:
     runs-on: ubuntu-latest
