@@ -43,3 +43,9 @@ jobs:
 * `version` - (optional, default: latest) specific [Shopify CLI](https://shopify.dev/docs/storefronts/themes/tools/cli) `@shopify/theme` (`v3.50`+) to use.
 * `token` - (optional) result of `${{ github.token }}` to enable GitHub check annotations.
 * `base` - (optional) When `token` is set, only the files that contain a diff with this ref (branch, tag or commit) will have GitHub check annotations.
+
+The action uses pnpm when `package.json`'s `packageManager` starts with `pnpm@`;
+if that field is absent, it checks for `pnpm-workspace.yaml` or `pnpm-lock.yaml`.
+If pnpm is not available, it falls back to npm. The Shopify CLI is installed in
+a temporary directory, leaving the repository's package manifest and lockfile
+untouched.

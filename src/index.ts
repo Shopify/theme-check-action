@@ -9,7 +9,6 @@ import * as semver from 'semver';
 
 async function run() {
   const cwd = process.cwd();
-  const shopifyExecutable = `${cwd}/node_modules/.bin/shopify`;
 
   // This is mockable with process.env.INPUT_ALL_CAPS_NAME
   const themeRoot = core.getInput('theme_root') || cwd;
@@ -20,7 +19,7 @@ async function run() {
   const devPreview = requiresDevPreview(version);
 
   try {
-    await installCli(version);
+    const shopifyExecutable = await installCli(version);
     if (ghToken) {
       const [{ report }, configContent, fileDiff] =
         await Promise.all([

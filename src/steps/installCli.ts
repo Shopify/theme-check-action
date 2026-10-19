@@ -1,4 +1,7 @@
-import { exec } from '@actions/exec';
+import { exec, getExecOutput } from '@actions/exec';
+import * as fs from 'fs';
+import * as os from 'os';
+import * as path from 'path';
 import * as semver from 'semver';
 
 const MIN_VERSION = '3.50.0';
@@ -13,18 +16,96 @@ export async function installCli(version?: string) {
     );
   }
 
-  await exec(
-    'npm',
-    [
+  const packages = [
+    `@shopify/cli${versionSuffix}`,
+    ...(shouldIncludeTheme(version)
+      ? [`@shopify/theme${versionSuffix}`]
+      : []),
+  ];
+  const cwd = process.cwd();
+  if (!isPnpmProject(cwd)) {
+    await exec('npm', [
       'install',
       '--no-package-lock',
       '--no-save',
-      `@shopify/cli${versionSuffix}`,
-      shouldIncludeTheme(version)
-        ? `@shopify/theme${versionSuffix}`
-        : '',
-    ].filter(Boolean),
+      ...packages,
+    ]);
+    return path.join(cwd, 'node_modules', '.bin', 'shopify');
+  }
+
+  const installDirectory = createTemporaryInstallDirectory();
+  copyNpmConfig(cwd, installDirectory);
+
+  if (await isPnpmAvailable()) {
+    await exec('pnpm', [
+      'add',
+      '--dir',
+      installDirectory,
+      '--no-lockfile',
+      ...packages,
+    ]);
+  } else {
+    await exec('npm', [
+      'install',
+      '--prefix',
+      installDirectory,
+      '--no-package-lock',
+      '--no-save',
+      ...packages,
+    ]);
+  }
+
+  return path.join(installDirectory, 'node_modules', '.bin', 'shopify');
+}
+
+function isPnpmProject(cwd: string) {
+  const packageJsonPath = path.join(cwd, 'package.json');
+  if (fs.existsSync(packageJsonPath)) {
+    try {
+      const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf8'));
+      if (typeof packageJson.packageManager === 'string') {
+        return packageJson.packageManager.startsWith('pnpm@');
+      }
+    } catch (_error) {
+      // Fall back to the pnpm workspace and lockfile markers.
+    }
+  }
+
+  return (
+    fs.existsSync(path.join(cwd, 'pnpm-workspace.yaml')) ||
+    fs.existsSync(path.join(cwd, 'pnpm-lock.yaml'))
   );
+}
+
+async function isPnpmAvailable() {
+  try {
+    const { exitCode } = await getExecOutput('pnpm', ['--version'], {
+      ignoreReturnCode: true,
+      silent: true,
+    });
+    return exitCode === 0;
+  } catch (_error) {
+    return false;
+  }
+}
+
+function createTemporaryInstallDirectory() {
+  const runnerTemp = process.env.RUNNER_TEMP || os.tmpdir();
+  fs.mkdirSync(runnerTemp, { recursive: true });
+  return fs.mkdtempSync(path.join(runnerTemp, 'theme-check-action-'));
+}
+
+function copyNpmConfig(cwd: string, installDirectory: string) {
+  const npmConfigPath = path.join(cwd, '.npmrc');
+  if (!fs.existsSync(npmConfigPath)) {
+    return;
+  }
+
+  const temporaryNpmConfigPath = path.join(installDirectory, '.npmrc');
+  fs.copyFileSync(npmConfigPath, temporaryNpmConfigPath);
+  if (process.platform !== 'win32') {
+    fs.chmodSync(temporaryNpmConfigPath, 0o600);
+  }
 }
 
 function shouldIncludeTheme(version?: string) {

@@ -1,6 +1,7 @@
 {
   "scripts": {
     "build": "ncc build src/index.ts -o dist --transpile-only --minify",
+    "test": "node --require ts-node/register --test test/*.test.cjs",
     "step": "scripts/run-step",
     "step:install": "scripts/run-step installCli",
     "step:check:json": "scripts/run-step runChecksJson",
