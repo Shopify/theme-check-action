@@ -136,11 +136,11 @@ export async function addAnnotations(
         end_line: offense.end_row + 1,
         start_column:
           offense.start_row == offense.end_row
-            ? offense.start_column
+            ? offense.start_column + 1
             : undefined,
         end_column:
           offense.start_row == offense.end_row
-            ? offense.end_column
+            ? offense.end_column + 1
             : undefined,
         annotation_level: SeverityConversion[offense.severity],
         message: `[${offense.check}] ${offense.message}`,
