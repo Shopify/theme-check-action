@@ -101,6 +101,78 @@ test('gets changed line ranges and preserves the existing file-only diff', async
   assert.deepEqual(fileDiff.files, originalFileList);
 });
 
+test('preserves changed-line offenses for real Git paths containing spaces', async (t) => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'theme-check-spaces-'));
+  t.after(() => fs.rmSync(root, { recursive: true, force: true }));
+  runGit(root, 'init');
+  const paths = ['a file.liquid', 'trailing space.liquid '];
+  for (const file of paths) fs.writeFileSync(path.join(root, file), 'old\n');
+  runGit(root, 'add', '.');
+  runGit(
+    root,
+    '-c',
+    'user.name=Test',
+    '-c',
+    'user.email=test@example.invalid',
+    'commit',
+    '-m',
+    'base',
+  );
+  for (const file of paths) fs.writeFileSync(path.join(root, file), 'new\n');
+  const diff = execFileSync(
+    'git',
+    ['-c', 'core.quotePath=false', 'diff', '--unified=0'],
+    {
+      cwd: root,
+      encoding: 'utf8',
+    },
+  );
+  const parsed = parseGitDiff(diff);
+  const reports = filterReportsToChangedLines(
+    paths.map((file) => ({
+      path: path.join(root, file),
+      offenses: [offense('error', 0, 0)],
+      errorCount: 1,
+      warningCount: 0,
+      infoCount: 0,
+    })),
+    parsed.changedLines,
+    root,
+  );
+  assert.deepEqual(
+    reports.map(({ errorCount }) => errorCount),
+    [1, 1],
+  );
+  assert.deepEqual(parsed.files, paths);
+
+  // Literal tabs in filenames are quoted by Git, not header delimiters.
+  fs.writeFileSync(path.join(root, 'literal\ttab.liquid'), 'old\n');
+  runGit(root, 'add', '.');
+  runGit(
+    root,
+    '-c',
+    'user.name=Test',
+    '-c',
+    'user.email=test@example.invalid',
+    'commit',
+    '-m',
+    'tab path',
+  );
+  fs.writeFileSync(path.join(root, 'literal\ttab.liquid'), 'new\n');
+  const quotedDiff = execFileSync(
+    'git',
+    ['-c', 'core.quotePath=false', 'diff', '--unified=0'],
+    {
+      cwd: root,
+      encoding: 'utf8',
+    },
+  );
+  assert.throws(
+    () => parseGitDiff(quotedDiff),
+    /cannot safely parse a quoted path/,
+  );
+});
+
 test('keeps offenses overlapping changed lines and recalculates report counts', () => {
   const root = '/repo';
   const [report] = filterReportsToChangedLines(

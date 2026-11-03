@@ -106,7 +106,8 @@ export function parseGitDiff(output: string): FileDiff {
 }
 
 function parseGitFilePath(headerPath: string): string | undefined {
-  const pathValue = headerPath.replace(/\r$/, '');
+  // Git terminates unquoted paths containing spaces with a tab delimiter.
+  const pathValue = headerPath.replace(/\r$/, '').replace(/\t$/, '');
   if (pathValue === '/dev/null') return undefined;
   if (!pathValue.startsWith('b/') || pathValue.includes('"')) {
     throw new Error(
