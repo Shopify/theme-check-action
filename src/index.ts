@@ -4,6 +4,7 @@ import { runChecksJson } from './steps/runChecksJson';
 import { runChecksText } from './steps/runChecksText';
 import { getConfigContents } from './steps/getConfigContents';
 import { getFileDiff } from './steps/getFileDiff';
+import { filterReportsToChangedLines } from './steps/filterChangedLines';
 import { addAnnotations } from './addAnnotations';
 import * as semver from 'semver';
 
@@ -20,6 +21,14 @@ async function run() {
   const devPreview = requiresDevPreview(version);
 
   try {
+    const checkModifiedLines = core.getBooleanInput('check_modified_lines');
+    if (checkModifiedLines && !ghToken) {
+      throw new Error('check_modified_lines requires the token input.');
+    }
+    if (checkModifiedLines && !base) {
+      throw new Error('check_modified_lines requires the base input.');
+    }
+
     await installCli(version);
     if (ghToken) {
       const [{ report }, configContent, fileDiff] =
@@ -31,13 +40,21 @@ async function run() {
             flags,
           ),
           getConfigContents(themeRoot, shopifyExecutable, devPreview),
-          getFileDiff(base, cwd),
+          getFileDiff(base, cwd, checkModifiedLines),
         ]);
+      const reports = checkModifiedLines
+        ? filterReportsToChangedLines(
+            report,
+            fileDiff?.changedLines || {},
+            cwd,
+            themeRoot,
+          )
+        : report;
       await addAnnotations(
-        report,
+        reports,
         configContent,
         ghToken,
-        fileDiff,
+        fileDiff?.files,
       );
       process.exit(0);
     } else {

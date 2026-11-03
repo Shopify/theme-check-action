@@ -21,6 +21,10 @@ inputs:
   base:
     description: 'When token is set, only the files that contain a diff with this ref (branch, tag or commit) will have GitHub annotations.'
     required: false
+  check_modified_lines:
+    description: 'When true, only Theme Check offenses on added or changed lines fail the GitHub check. Requires token and base.'
+    required: false
+    default: 'false'
 runs:
   using: 'node20'
   main: 'dist/index.js'

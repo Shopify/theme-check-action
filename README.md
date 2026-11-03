@@ -43,3 +43,11 @@ jobs:
 * `version` - (optional, default: latest) specific [Shopify CLI](https://shopify.dev/docs/storefronts/themes/tools/cli) `@shopify/theme` (`v3.50`+) to use.
 * `token` - (optional) result of `${{ github.token }}` to enable GitHub check annotations.
 * `base` - (optional) When `token` is set, only the files that contain a diff with this ref (branch, tag or commit) will have GitHub check annotations.
+* `check_modified_lines` - (optional, default: `false`) When `true`, only offenses whose source range overlaps added or changed lines are included in the GitHub check result. Requires both `token` and `base`; the check still evaluates the whole theme, but unchanged-line offenses do not fail it.
+
+```yml
+with:
+  token: ${{ github.token }}
+  base: main
+  check_modified_lines: true
+```
